@@ -1,4 +1,18 @@
-type ExampleEntity @entity {
-  id: String!
-  name: String!
+type Intent @entity {
+  id: Bytes!
+  tokenIn: Bytes!
+  tokenOut: Bytes!
+  maker: Bytes!
+  filler: Bytes!
+  referrer: Bytes!
+  deadline: Int!
+  isPartiallyFillable: Boolean!
+  amountIn: BigInt!
+  startAmountOut: BigInt!
+  expectedAmountOut: BigInt!
+  endAmountOut: BigInt!
+  events: [String!]!
+  isCancelled: Boolean!
+  isValidated: Boolean!
+  amountFilled: BigInt!
 }
