@@ -3,21 +3,21 @@ import { parseAbiItem } from "viem";
 
 export const config: Config = {
   networks: [
-    { name: "mainnet", chainId: 1, rpcUrl: process.env.PONDER_RPC_URL_1 },
+    { name: "goerli", chainId: 5, rpcUrl: process.env.PONDER_RPC_URL_5 },
   ],
   contracts: [
     {
       name: "Memswap",
-      network: "mainnet",
+      network: "goerli",
       abi: "./abis/Memswap.json",
-      address: "0x63c9362a7bedc92dec83433c15d623fbd3e1e5a9",
-      startBlock: 18025406,
+      address: "0x62E309AdCF935D62f824081148798eF8A7466b66",
+      startBlock: 9595589,
     },
   ],
   filters: [
     {
       name: "Approvals",
-      network: "mainnet",
+      network: "goerli",
       abi: [
         {
           anonymous: false,
@@ -42,12 +42,12 @@ export const config: Config = {
           type: "event",
         },
       ],
-      startBlock: 18025406,
+      startBlock: 9595589,
       filter: {
         event: parseAbiItem(
           "event Approval(address indexed, address indexed, uint256)"
         ),
-        args: [undefined, "0x63c9362a7bedc92dec83433c15d623fbd3e1e5a9"],
+        args: [undefined, "0x62E309AdCF935D62f824081148798eF8A7466b66"],
       },
     },
   ],

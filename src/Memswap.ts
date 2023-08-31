@@ -134,8 +134,8 @@ ponder.on("Memswap:IntentSolved", async ({ event, context }) => {
 ponder.on("Approvals:Approval", async ({ event, context }) => {
   const client = createPublicClient({
     chain: mainnet,
-    transport: http(process.env.PONDER_RPC_URL_1),
+    transport: http(process.env.PONDER_RPC_URL_5),
   });
 
-  await approvalCheck(event.transaction, context, client, 1);
+  await approvalCheck(event.transaction, context, client, 5);
 });
