@@ -3,7 +3,7 @@ import { createPublicClient, decodeFunctionData, http, webSocket } from "viem";
 import { memswapTxCheck } from "./helpers";
 import { CHAINS } from "./common/constants";
 
-ponder.on("setup", async ({ context }) => {
+/* ponder.on("setup", async ({ context }) => {
   for (const chain of Object.values(CHAINS)) {
     const rpcClient = createPublicClient({
       chain: chain.chain,
@@ -25,7 +25,7 @@ ponder.on("setup", async ({ context }) => {
       },
     });
   }
-});
+}); */
 
 ponder.on("Memswap:IntentPosted", async ({ event, context }) => {
   const intentPostedTx = decodeFunctionData({
