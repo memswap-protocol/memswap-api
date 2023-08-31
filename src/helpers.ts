@@ -4,65 +4,54 @@ import {
   Transport,
   decodeAbiParameters,
   decodeFunctionData,
-  parseAbi,
   parseAbiParameters,
 } from "viem";
 import { Chain } from "viem/chains";
 import { MEMSWAP, MEMSWAP_WETH } from "./common/constants";
 import { AddressType, MatchmakerIntent } from "./common/types";
 import { getEIP712Domain, getEIP712TypesForIntent } from "./common/utils";
+import { Transaction } from "@ponder/core";
 
-export const memswapTxCheck = async (
+export const approvalCheck = async (
+  transaction: Transaction,
+  context: Context,
   client: PublicClient<Transport, Chain>,
-  txHash: `0x${string}`,
-  context: Context
+  chainId: number
 ) => {
   try {
-    const tx = await client.getTransaction({
-      hash: txHash,
+    const approvalTx = decodeFunctionData({
+      abi: [
+        {
+          inputs: [{ type: "address" }, { type: "uint256" }],
+          name: "approve",
+          outputs: [{ type: "bool" }],
+          stateMutability: "nonpayable",
+          type: "function",
+        },
+        {
+          inputs: [{ type: "address" }, { type: "uint256" }],
+          name: "depositAndApprove",
+          outputs: [],
+          stateMutability: "payable",
+          type: "function",
+        },
+      ],
+      data: transaction.input,
     });
 
-    const chainId = tx.chainId;
-
-    if (!chainId) {
-      return;
-    }
-
-    // Try to decode any intent appended at the end of the calldata
     let restOfCalldata: `0x${string}` | undefined;
     let approvalTxHash: `0x${string}` | undefined;
-    if (tx.input.startsWith("0x095ea7b3")) {
-      const abiItem = parseAbi([
-        "function approve(address spender, uint256 amount)",
-      ]);
 
-      const spender = decodeFunctionData({
-        abi: abiItem,
-        data: tx.input,
-      }).args[0].toLowerCase();
+    const spender = (
+      approvalTx.args?.[0] as `0x${string}`
+    ).toLowerCase() as `0x${string}`;
 
-      if (spender === MEMSWAP[chainId]) {
-        restOfCalldata = `0x${tx.input.slice(2 + 2 * (4 + 32 + 32))}`;
-        approvalTxHash = txHash;
-      }
-    } else if (
-      tx.input.startsWith("0x28026ace") &&
-      tx.to?.toLowerCase() === MEMSWAP_WETH[chainId]
+    if (
+      approvalTx.args &&
+      (spender === MEMSWAP[chainId] || spender === MEMSWAP_WETH[chainId])
     ) {
-      const abiItem = parseAbi([
-        "function depositAndApprove(address spender, uint256 amount)",
-      ]);
-
-      const spender = decodeFunctionData({
-        abi: abiItem,
-        data: tx.input,
-      }).args[0].toLowerCase();
-      if (spender === MEMSWAP[chainId]) {
-        restOfCalldata = `0x${tx.input.slice(2 + 2 * (4 + 32 + 32))}`;
-        approvalTxHash = txHash;
-      }
-    } else {
-      restOfCalldata = tx.input;
+      restOfCalldata = `0x${transaction.input.slice(2 + 2 * (4 + 32 + 32))}`;
+      approvalTxHash = transaction.hash;
     }
 
     let intent: MatchmakerIntent | undefined;
@@ -137,6 +126,10 @@ export const memswapTxCheck = async (
         ],
       });
 
+      const existingIntent = await Intent.findUnique({
+        id: intentHash,
+      });
+
       await Intent.upsert({
         id: intentHash,
         create: {
@@ -148,15 +141,19 @@ export const memswapTxCheck = async (
           isPartiallyFillable: intent.isPartiallyFillable,
           amountIn: BigInt(intent.amountIn),
           endAmountOut: BigInt(intent.endAmountOut),
-          events: [tx.hash],
+          events: [transaction.hash],
           isCancelled: false,
           isValidated: false,
           amountFilled: BigInt(0),
         },
-        update: {},
+        update: {
+          events: existingIntent
+            ? [transaction.hash, ...existingIntent.events]
+            : undefined,
+        },
       });
+
+      console.log("new intent: ", transaction.hash);
     }
-  } catch (err) {
-    return;
-  }
+  } catch (err) {}
 };
