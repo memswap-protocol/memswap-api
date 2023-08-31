@@ -3,13 +3,10 @@ type Intent @entity {
   tokenIn: Bytes!
   tokenOut: Bytes!
   maker: Bytes!
-  filler: Bytes!
-  referrer: Bytes!
+  matchmaker: Bytes!
   deadline: Int!
   isPartiallyFillable: Boolean!
   amountIn: BigInt!
-  startAmountOut: BigInt!
-  expectedAmountOut: BigInt!
   endAmountOut: BigInt!
   events: [String!]!
   isCancelled: Boolean!

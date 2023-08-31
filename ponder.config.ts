@@ -9,8 +9,8 @@ export const config: Config = {
       name: "Memswap",
       network: "goerli",
       abi: "./abis/Memswap.json",
-      address: "0x749f8feaec5eb53f9ce677a252467fa289272591",
-      startBlock: 9567324,
+      address: "0x62E309AdCF935D62f824081148798eF8A7466b66",
+      startBlock: 9595589,
     },
   ],
 };

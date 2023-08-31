@@ -1,7 +1,7 @@
 export type MatchmakerIntent = {
   tokenIn: string;
   tokenOut: string;
-  maker: `0x${string}`;
+  maker: string;
   matchmaker: string;
   source: string;
   feeBps: number;
@@ -12,5 +12,7 @@ export type MatchmakerIntent = {
   endAmountOut: string;
   startAmountBps: number;
   expectedAmountBps: number;
-  signature: `0x${string}`;
+  signature: string;
 };
+
+export type AddressType = `0x${string}`;

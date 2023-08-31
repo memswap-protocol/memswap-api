@@ -60,7 +60,7 @@
       {
         "indexed": false,
         "internalType": "address",
-        "name": "filler",
+        "name": "solver",
         "type": "address"
       },
       {
@@ -117,16 +117,8 @@
     "inputs": [{ "internalType": "bytes32", "name": "", "type": "bytes32" }],
     "name": "authorization",
     "outputs": [
-      {
-        "internalType": "uint128",
-        "name": "maximumAmountIn",
-        "type": "uint128"
-      },
-      {
-        "internalType": "uint128",
-        "name": "minimumAmountOut",
-        "type": "uint128"
-      },
+      { "internalType": "uint128", "name": "maxAmountIn", "type": "uint128" },
+      { "internalType": "uint128", "name": "minAmountOut", "type": "uint128" },
       { "internalType": "uint32", "name": "blockDeadline", "type": "uint32" },
       { "internalType": "bool", "name": "isPartiallyFillable", "type": "bool" }
     ],
@@ -148,18 +140,14 @@
             "type": "address"
           },
           { "internalType": "address", "name": "maker", "type": "address" },
-          { "internalType": "address", "name": "filler", "type": "address" },
-          { "internalType": "address", "name": "referrer", "type": "address" },
           {
-            "internalType": "uint32",
-            "name": "referrerFeeBps",
-            "type": "uint32"
+            "internalType": "address",
+            "name": "matchmaker",
+            "type": "address"
           },
-          {
-            "internalType": "uint32",
-            "name": "referrerSurplusBps",
-            "type": "uint32"
-          },
+          { "internalType": "address", "name": "source", "type": "address" },
+          { "internalType": "uint16", "name": "feeBps", "type": "uint16" },
+          { "internalType": "uint16", "name": "surplusBps", "type": "uint16" },
           { "internalType": "uint32", "name": "deadline", "type": "uint32" },
           {
             "internalType": "bool",
@@ -169,18 +157,18 @@
           { "internalType": "uint128", "name": "amountIn", "type": "uint128" },
           {
             "internalType": "uint128",
-            "name": "startAmountOut",
-            "type": "uint128"
-          },
-          {
-            "internalType": "uint128",
-            "name": "expectedAmountOut",
-            "type": "uint128"
-          },
-          {
-            "internalType": "uint128",
             "name": "endAmountOut",
             "type": "uint128"
+          },
+          {
+            "internalType": "uint16",
+            "name": "startAmountBps",
+            "type": "uint16"
+          },
+          {
+            "internalType": "uint16",
+            "name": "expectedAmountBps",
+            "type": "uint16"
           },
           { "internalType": "bytes", "name": "signature", "type": "bytes" }
         ],
@@ -190,19 +178,19 @@
       },
       {
         "internalType": "address",
-        "name": "authorizedFiller",
+        "name": "authorizedSolver",
         "type": "address"
       },
       {
         "components": [
           {
             "internalType": "uint128",
-            "name": "maximumAmountIn",
+            "name": "maxAmountIn",
             "type": "uint128"
           },
           {
             "internalType": "uint128",
-            "name": "minimumAmountOut",
+            "name": "minAmountOut",
             "type": "uint128"
           },
           {
@@ -241,18 +229,14 @@
             "type": "address"
           },
           { "internalType": "address", "name": "maker", "type": "address" },
-          { "internalType": "address", "name": "filler", "type": "address" },
-          { "internalType": "address", "name": "referrer", "type": "address" },
           {
-            "internalType": "uint32",
-            "name": "referrerFeeBps",
-            "type": "uint32"
+            "internalType": "address",
+            "name": "matchmaker",
+            "type": "address"
           },
-          {
-            "internalType": "uint32",
-            "name": "referrerSurplusBps",
-            "type": "uint32"
-          },
+          { "internalType": "address", "name": "source", "type": "address" },
+          { "internalType": "uint16", "name": "feeBps", "type": "uint16" },
+          { "internalType": "uint16", "name": "surplusBps", "type": "uint16" },
           { "internalType": "uint32", "name": "deadline", "type": "uint32" },
           {
             "internalType": "bool",
@@ -262,18 +246,18 @@
           { "internalType": "uint128", "name": "amountIn", "type": "uint128" },
           {
             "internalType": "uint128",
-            "name": "startAmountOut",
-            "type": "uint128"
-          },
-          {
-            "internalType": "uint128",
-            "name": "expectedAmountOut",
-            "type": "uint128"
-          },
-          {
-            "internalType": "uint128",
             "name": "endAmountOut",
             "type": "uint128"
+          },
+          {
+            "internalType": "uint16",
+            "name": "startAmountBps",
+            "type": "uint16"
+          },
+          {
+            "internalType": "uint16",
+            "name": "expectedAmountBps",
+            "type": "uint16"
           },
           { "internalType": "bytes", "name": "signature", "type": "bytes" }
         ],
@@ -292,19 +276,19 @@
       { "internalType": "bytes32", "name": "intentHash", "type": "bytes32" },
       {
         "internalType": "address",
-        "name": "authorizedFiller",
+        "name": "authorizedSolver",
         "type": "address"
       },
       {
         "components": [
           {
             "internalType": "uint128",
-            "name": "maximumAmountIn",
+            "name": "maxAmountIn",
             "type": "uint128"
           },
           {
             "internalType": "uint128",
-            "name": "minimumAmountOut",
+            "name": "minAmountOut",
             "type": "uint128"
           },
           {
@@ -349,18 +333,14 @@
             "type": "address"
           },
           { "internalType": "address", "name": "maker", "type": "address" },
-          { "internalType": "address", "name": "filler", "type": "address" },
-          { "internalType": "address", "name": "referrer", "type": "address" },
           {
-            "internalType": "uint32",
-            "name": "referrerFeeBps",
-            "type": "uint32"
+            "internalType": "address",
+            "name": "matchmaker",
+            "type": "address"
           },
-          {
-            "internalType": "uint32",
-            "name": "referrerSurplusBps",
-            "type": "uint32"
-          },
+          { "internalType": "address", "name": "source", "type": "address" },
+          { "internalType": "uint16", "name": "feeBps", "type": "uint16" },
+          { "internalType": "uint16", "name": "surplusBps", "type": "uint16" },
           { "internalType": "uint32", "name": "deadline", "type": "uint32" },
           {
             "internalType": "bool",
@@ -370,18 +350,18 @@
           { "internalType": "uint128", "name": "amountIn", "type": "uint128" },
           {
             "internalType": "uint128",
-            "name": "startAmountOut",
-            "type": "uint128"
-          },
-          {
-            "internalType": "uint128",
-            "name": "expectedAmountOut",
-            "type": "uint128"
-          },
-          {
-            "internalType": "uint128",
             "name": "endAmountOut",
             "type": "uint128"
+          },
+          {
+            "internalType": "uint16",
+            "name": "startAmountBps",
+            "type": "uint16"
+          },
+          {
+            "internalType": "uint16",
+            "name": "expectedAmountBps",
+            "type": "uint16"
           },
           { "internalType": "bytes", "name": "signature", "type": "bytes" }
         ],
@@ -423,18 +403,14 @@
             "type": "address"
           },
           { "internalType": "address", "name": "maker", "type": "address" },
-          { "internalType": "address", "name": "filler", "type": "address" },
-          { "internalType": "address", "name": "referrer", "type": "address" },
           {
-            "internalType": "uint32",
-            "name": "referrerFeeBps",
-            "type": "uint32"
+            "internalType": "address",
+            "name": "matchmaker",
+            "type": "address"
           },
-          {
-            "internalType": "uint32",
-            "name": "referrerSurplusBps",
-            "type": "uint32"
-          },
+          { "internalType": "address", "name": "source", "type": "address" },
+          { "internalType": "uint16", "name": "feeBps", "type": "uint16" },
+          { "internalType": "uint16", "name": "surplusBps", "type": "uint16" },
           { "internalType": "uint32", "name": "deadline", "type": "uint32" },
           {
             "internalType": "bool",
@@ -444,18 +420,18 @@
           { "internalType": "uint128", "name": "amountIn", "type": "uint128" },
           {
             "internalType": "uint128",
-            "name": "startAmountOut",
-            "type": "uint128"
-          },
-          {
-            "internalType": "uint128",
-            "name": "expectedAmountOut",
-            "type": "uint128"
-          },
-          {
-            "internalType": "uint128",
             "name": "endAmountOut",
             "type": "uint128"
+          },
+          {
+            "internalType": "uint16",
+            "name": "startAmountBps",
+            "type": "uint16"
+          },
+          {
+            "internalType": "uint16",
+            "name": "expectedAmountBps",
+            "type": "uint16"
           },
           { "internalType": "bytes", "name": "signature", "type": "bytes" }
         ],
@@ -484,18 +460,14 @@
             "type": "address"
           },
           { "internalType": "address", "name": "maker", "type": "address" },
-          { "internalType": "address", "name": "filler", "type": "address" },
-          { "internalType": "address", "name": "referrer", "type": "address" },
           {
-            "internalType": "uint32",
-            "name": "referrerFeeBps",
-            "type": "uint32"
+            "internalType": "address",
+            "name": "matchmaker",
+            "type": "address"
           },
-          {
-            "internalType": "uint32",
-            "name": "referrerSurplusBps",
-            "type": "uint32"
-          },
+          { "internalType": "address", "name": "source", "type": "address" },
+          { "internalType": "uint16", "name": "feeBps", "type": "uint16" },
+          { "internalType": "uint16", "name": "surplusBps", "type": "uint16" },
           { "internalType": "uint32", "name": "deadline", "type": "uint32" },
           {
             "internalType": "bool",
@@ -505,18 +477,18 @@
           { "internalType": "uint128", "name": "amountIn", "type": "uint128" },
           {
             "internalType": "uint128",
-            "name": "startAmountOut",
-            "type": "uint128"
-          },
-          {
-            "internalType": "uint128",
-            "name": "expectedAmountOut",
-            "type": "uint128"
-          },
-          {
-            "internalType": "uint128",
             "name": "endAmountOut",
             "type": "uint128"
+          },
+          {
+            "internalType": "uint16",
+            "name": "startAmountBps",
+            "type": "uint16"
+          },
+          {
+            "internalType": "uint16",
+            "name": "expectedAmountBps",
+            "type": "uint16"
           },
           { "internalType": "bytes", "name": "signature", "type": "bytes" }
         ],
@@ -555,18 +527,14 @@
             "type": "address"
           },
           { "internalType": "address", "name": "maker", "type": "address" },
-          { "internalType": "address", "name": "filler", "type": "address" },
-          { "internalType": "address", "name": "referrer", "type": "address" },
           {
-            "internalType": "uint32",
-            "name": "referrerFeeBps",
-            "type": "uint32"
+            "internalType": "address",
+            "name": "matchmaker",
+            "type": "address"
           },
-          {
-            "internalType": "uint32",
-            "name": "referrerSurplusBps",
-            "type": "uint32"
-          },
+          { "internalType": "address", "name": "source", "type": "address" },
+          { "internalType": "uint16", "name": "feeBps", "type": "uint16" },
+          { "internalType": "uint16", "name": "surplusBps", "type": "uint16" },
           { "internalType": "uint32", "name": "deadline", "type": "uint32" },
           {
             "internalType": "bool",
@@ -576,18 +544,18 @@
           { "internalType": "uint128", "name": "amountIn", "type": "uint128" },
           {
             "internalType": "uint128",
-            "name": "startAmountOut",
-            "type": "uint128"
-          },
-          {
-            "internalType": "uint128",
-            "name": "expectedAmountOut",
-            "type": "uint128"
-          },
-          {
-            "internalType": "uint128",
             "name": "endAmountOut",
             "type": "uint128"
+          },
+          {
+            "internalType": "uint16",
+            "name": "startAmountBps",
+            "type": "uint16"
+          },
+          {
+            "internalType": "uint16",
+            "name": "expectedAmountBps",
+            "type": "uint16"
           },
           { "internalType": "bytes", "name": "signature", "type": "bytes" }
         ],
@@ -626,18 +594,14 @@
             "type": "address"
           },
           { "internalType": "address", "name": "maker", "type": "address" },
-          { "internalType": "address", "name": "filler", "type": "address" },
-          { "internalType": "address", "name": "referrer", "type": "address" },
           {
-            "internalType": "uint32",
-            "name": "referrerFeeBps",
-            "type": "uint32"
+            "internalType": "address",
+            "name": "matchmaker",
+            "type": "address"
           },
-          {
-            "internalType": "uint32",
-            "name": "referrerSurplusBps",
-            "type": "uint32"
-          },
+          { "internalType": "address", "name": "source", "type": "address" },
+          { "internalType": "uint16", "name": "feeBps", "type": "uint16" },
+          { "internalType": "uint16", "name": "surplusBps", "type": "uint16" },
           { "internalType": "uint32", "name": "deadline", "type": "uint32" },
           {
             "internalType": "bool",
@@ -647,18 +611,18 @@
           { "internalType": "uint128", "name": "amountIn", "type": "uint128" },
           {
             "internalType": "uint128",
-            "name": "startAmountOut",
-            "type": "uint128"
-          },
-          {
-            "internalType": "uint128",
-            "name": "expectedAmountOut",
-            "type": "uint128"
-          },
-          {
-            "internalType": "uint128",
             "name": "endAmountOut",
             "type": "uint128"
+          },
+          {
+            "internalType": "uint16",
+            "name": "startAmountBps",
+            "type": "uint16"
+          },
+          {
+            "internalType": "uint16",
+            "name": "expectedAmountBps",
+            "type": "uint16"
           },
           { "internalType": "bytes", "name": "signature", "type": "bytes" }
         ],
@@ -680,12 +644,12 @@
         "components": [
           {
             "internalType": "uint128",
-            "name": "maximumAmountIn",
+            "name": "maxAmountIn",
             "type": "uint128"
           },
           {
             "internalType": "uint128",
-            "name": "minimumAmountOut",
+            "name": "minAmountOut",
             "type": "uint128"
           },
           {
@@ -725,18 +689,14 @@
             "type": "address"
           },
           { "internalType": "address", "name": "maker", "type": "address" },
-          { "internalType": "address", "name": "filler", "type": "address" },
-          { "internalType": "address", "name": "referrer", "type": "address" },
           {
-            "internalType": "uint32",
-            "name": "referrerFeeBps",
-            "type": "uint32"
+            "internalType": "address",
+            "name": "matchmaker",
+            "type": "address"
           },
-          {
-            "internalType": "uint32",
-            "name": "referrerSurplusBps",
-            "type": "uint32"
-          },
+          { "internalType": "address", "name": "source", "type": "address" },
+          { "internalType": "uint16", "name": "feeBps", "type": "uint16" },
+          { "internalType": "uint16", "name": "surplusBps", "type": "uint16" },
           { "internalType": "uint32", "name": "deadline", "type": "uint32" },
           {
             "internalType": "bool",
@@ -746,18 +706,18 @@
           { "internalType": "uint128", "name": "amountIn", "type": "uint128" },
           {
             "internalType": "uint128",
-            "name": "startAmountOut",
-            "type": "uint128"
-          },
-          {
-            "internalType": "uint128",
-            "name": "expectedAmountOut",
-            "type": "uint128"
-          },
-          {
-            "internalType": "uint128",
             "name": "endAmountOut",
             "type": "uint128"
+          },
+          {
+            "internalType": "uint16",
+            "name": "startAmountBps",
+            "type": "uint16"
+          },
+          {
+            "internalType": "uint16",
+            "name": "expectedAmountBps",
+            "type": "uint16"
           },
           { "internalType": "bytes", "name": "signature", "type": "bytes" }
         ],
