@@ -1,31 +1,7 @@
 import { ponder } from "@/generated";
 import { createPublicClient, decodeFunctionData, http, webSocket } from "viem";
-import { memswapTxCheck } from "./helpers";
-import { CHAINS } from "./common/constants";
-
-/* ponder.on("setup", async ({ context }) => {
-  for (const chain of Object.values(CHAINS)) {
-    const rpcClient = createPublicClient({
-      chain: chain.chain,
-      transport: http(chain.rpcUrl),
-    });
-
-    const wsClient = createPublicClient({
-      chain: chain.chain,
-      transport: webSocket(chain.wsUrl),
-    });
-
-    wsClient.watchPendingTransactions({
-      onTransactions: async (hashes) => {
-        try {
-          const txHash = hashes[0];
-
-          memswapTxCheck(rpcClient, txHash, context);
-        } catch (err) {}
-      },
-    });
-  }
-}); */
+import { approvalCheck } from "./helpers";
+import { goerli } from "viem/chains";
 
 ponder.on("Memswap:IntentPosted", async ({ event, context }) => {
   const intentPostedTx = decodeFunctionData({
@@ -153,4 +129,13 @@ ponder.on("Memswap:IntentSolved", async ({ event, context }) => {
       });
     }
   }
+});
+
+ponder.on("Approvals:Approval", async ({ event, context }) => {
+  const client = createPublicClient({
+    chain: goerli,
+    transport: http(process.env.PONDER_RPC_URL_5),
+  });
+
+  await approvalCheck(event.transaction, context, client, 5);
 });
