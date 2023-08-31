@@ -1,7 +1,7 @@
 import { ponder } from "@/generated";
 import { createPublicClient, decodeFunctionData, http, webSocket } from "viem";
 import { approvalCheck } from "./helpers";
-import { goerli } from "viem/chains";
+import { goerli, mainnet } from "viem/chains";
 
 ponder.on("Memswap:IntentPosted", async ({ event, context }) => {
   const intentPostedTx = decodeFunctionData({
@@ -133,9 +133,9 @@ ponder.on("Memswap:IntentSolved", async ({ event, context }) => {
 
 ponder.on("Approvals:Approval", async ({ event, context }) => {
   const client = createPublicClient({
-    chain: goerli,
-    transport: http(process.env.PONDER_RPC_URL_5),
+    chain: mainnet,
+    transport: http(process.env.PONDER_RPC_URL_1),
   });
 
-  await approvalCheck(event.transaction, context, client, 5);
+  await approvalCheck(event.transaction, context, client, 1);
 });

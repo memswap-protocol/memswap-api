@@ -1,20 +1,12 @@
-import { goerli } from "viem/chains";
-
 type ChainIdToAddress = { [chainId: number]: `0x${string}` };
 
 // Protocol
 export const MEMSWAP: ChainIdToAddress = {
-  5: "0x62e309adcf935d62f824081148798ef8a7466b66",
+  1: "0x63c9362a7bedc92dec83433c15d623fbd3e1e5a9",
+  5: "0x62E309AdCF935D62f824081148798eF8A7466b66",
 };
 
 export const MEMSWAP_WETH: ChainIdToAddress = {
+  1: "0x2712515766af2e2680f20e8372c7ea6010eaca66",
   5: "0x5088a0a51e45b5a00c049676dc11f12bb8b4ec29",
-};
-
-export const CHAINS = {
-  5: {
-    chain: goerli,
-    rpcUrl: process.env.PONDER_RPC_URL_5,
-    wsUrl: process.env.WEBSOCKET_RPC_URL_5,
-  },
 };
