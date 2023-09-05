@@ -3,7 +3,6 @@ import { Chain, goerli, mainnet } from "viem/chains";
 import { Assign } from "viem/dist/types/types/utils";
 import { ChainConfig, ChainFormatters } from "viem/dist/types/types/chain";
 
-// Protocol
 export const MEMSWAP: ChainIdToAddress = {
   1: "0x63c9362a7bedc92dec83433c15d623fbd3e1e5a9",
   5: "0x62E309AdCF935D62f824081148798eF8A7466b66",
