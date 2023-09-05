@@ -1,24 +1,31 @@
 import { Context } from "@/generated";
 import {
-  PublicClient,
-  Transport,
+  createPublicClient,
   decodeAbiParameters,
   decodeFunctionData,
+  http,
+  parseAbi,
   parseAbiParameters,
+  zeroAddress,
 } from "viem";
-import { Chain } from "viem/chains";
-import { MEMSWAP, MEMSWAP_WETH } from "./common/constants";
+import {
+  MEMSWAP,
+  MEMSWAP_WETH,
+  MemswapChains,
+  REGULAR_WETH,
+} from "./common/constants";
 import { AddressType, MatchmakerIntent } from "./common/types";
 import { getEIP712Domain, getEIP712TypesForIntent } from "./common/utils";
 import { Transaction } from "@ponder/core";
+import { Currency, WETH9, Token, Ether } from "@uniswap/sdk-core";
 
 export const approvalCheck = async (
   transaction: Transaction,
-  context: Context,
-  client: PublicClient<Transport, Chain>,
-  chainId: number
+  context: Context
 ) => {
   try {
+    const chain = MemswapChains[Number(process.env.ACTIVE_NETWORK)];
+
     const approvalTx = decodeFunctionData({
       abi: [
         {
@@ -48,7 +55,7 @@ export const approvalCheck = async (
 
     if (
       approvalTx.args &&
-      (spender === MEMSWAP[chainId] || spender === MEMSWAP_WETH[chainId])
+      (spender === MEMSWAP[chain.id] || spender === MEMSWAP_WETH[chain.id])
     ) {
       restOfCalldata = `0x${transaction.input.slice(2 + 2 * (4 + 32 + 32))}`;
       approvalTxHash = transaction.hash;
@@ -87,10 +94,15 @@ export const approvalCheck = async (
     }
 
     if (intent) {
+      const client = createPublicClient({
+        chain,
+        transport: http(process.env[`PONDER_RPC_URL_${chain.id}`]),
+      });
+
       // Check the signature first
       const valid = await client.verifyTypedData({
         address: intent.maker as AddressType,
-        domain: getEIP712Domain(chainId),
+        domain: getEIP712Domain(chain.id),
         types: getEIP712TypesForIntent(),
         primaryType: "Intent",
         message: intent,
@@ -101,7 +113,7 @@ export const approvalCheck = async (
         return;
       }
 
-      const { Intent } = context.entities;
+      const { Intent, Currency } = context.entities;
 
       const intentHash = await client.readContract({
         ...context.contracts.Memswap,
@@ -126,6 +138,12 @@ export const approvalCheck = async (
         ],
       });
 
+      const { tokenIn, tokenOut } = await getTokenDetails(
+        intent.tokenIn as `0x${string}`,
+        intent.tokenOut as `0x${string}`,
+        Currency
+      );
+
       const existingIntent = await Intent.findUnique({
         id: intentHash,
       });
@@ -133,8 +151,8 @@ export const approvalCheck = async (
       await Intent.upsert({
         id: intentHash,
         create: {
-          tokenIn: intent.tokenIn,
-          tokenOut: intent.tokenOut,
+          tokenIn: tokenIn,
+          tokenOut: tokenOut,
           maker: intent.maker,
           matchmaker: intent.matchmaker,
           deadline: intent.deadline,
@@ -152,8 +170,78 @@ export const approvalCheck = async (
             : undefined,
         },
       });
-
-      console.log("new intent: ", transaction.hash);
     }
   } catch (err) {}
+};
+
+export const getToken = async (address: `0x${string}`): Promise<Currency> => {
+  const chain = MemswapChains[Number(process.env.ACTIVE_NETWORK)];
+
+  if ([MEMSWAP_WETH[chain.id], zeroAddress].includes(address)) {
+    return Ether.onChain(chain.id);
+  }
+
+  const client = createPublicClient({
+    chain,
+    transport: http(process.env[`PONDER_RPC_URL_${chain.id}`]),
+  });
+
+  const decimals = await client.readContract({
+    abi: parseAbi(["function decimals() view returns (uint8)"]),
+    address,
+    functionName: "decimals",
+  });
+
+  // The core Uniswap SDK misses the WETH9 address for some chains (eg. Sepolia)
+  if (!WETH9[chain.id]) {
+    WETH9[chain.id] = new Token(
+      chain.id,
+      REGULAR_WETH[chain.id],
+      decimals,
+      "WETH",
+      "Wrapped Ether"
+    );
+  }
+
+  return new Token(chain.id, address, decimals);
+};
+
+export const getTokenDetails = async (
+  tokenInAddress: `0x${string}`,
+  tokenOutAddress: `0x${string}`,
+  Currency: Context["entities"]["Currency"]
+): Promise<{ tokenIn: string; tokenOut: string }> => {
+  const tokenInInfo = await getToken(tokenInAddress);
+
+  const tokenIn = await Currency.upsert({
+    id: tokenInAddress as string,
+    create: {
+      isNative: tokenInInfo.isNative,
+      isToken: tokenInInfo.isToken,
+      chainId: tokenInInfo.chainId,
+      decimals: tokenInInfo.decimals,
+      symbol: tokenInInfo.symbol,
+      name: tokenInInfo.name,
+      address: (tokenInInfo as Token)?.address,
+    },
+    update: {},
+  });
+
+  const tokenOutInfo = await getToken(tokenOutAddress);
+
+  const tokenOut = await Currency.upsert({
+    id: tokenOutAddress as string,
+    create: {
+      isNative: tokenOutInfo.isNative,
+      isToken: tokenOutInfo.isToken,
+      chainId: tokenOutInfo.chainId,
+      decimals: tokenOutInfo.decimals,
+      symbol: tokenOutInfo.symbol,
+      name: tokenOutInfo.name,
+      address: (tokenOutInfo as Token)?.address,
+    },
+    update: {},
+  });
+
+  return { tokenIn: tokenIn.id, tokenOut: tokenOut.id };
 };

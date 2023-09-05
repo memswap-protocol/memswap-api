@@ -1,3 +1,5 @@
+export type ChainIdToAddress = { [chainId: number]: `0x${string}` };
+
 export type MatchmakerIntent = {
   tokenIn: string;
   tokenOut: string;

@@ -1,7 +1,18 @@
+type Currency @entity {
+  id: String!
+  isNative: Boolean!
+  isToken: Boolean!
+  chainId: Int!
+  decimals: Int!
+  symbol: String
+  name: String
+  address: String
+}
+
 type Intent @entity {
   id: Bytes!
-  tokenIn: Bytes!
-  tokenOut: Bytes!
+  tokenIn: Currency!
+  tokenOut: Currency!
   maker: Bytes!
   matchmaker: Bytes!
   deadline: Int!

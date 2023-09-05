@@ -1,7 +1,6 @@
 import { ponder } from "@/generated";
-import { createPublicClient, decodeFunctionData, http, webSocket } from "viem";
-import { approvalCheck } from "./helpers";
-import { goerli, mainnet } from "viem/chains";
+import { decodeFunctionData } from "viem";
+import { approvalCheck, getTokenDetails } from "./helpers";
 
 ponder.on("Memswap:IntentPosted", async ({ event, context }) => {
   const intentPostedTx = decodeFunctionData({
@@ -9,7 +8,7 @@ ponder.on("Memswap:IntentPosted", async ({ event, context }) => {
     data: event.transaction.input,
   });
 
-  const { Intent } = context.entities;
+  const { Intent, Currency } = context.entities;
   const intentPostedArgs = intentPostedTx.args;
 
   if (typeof intentPostedArgs?.[0] === "object") {
@@ -19,11 +18,17 @@ ponder.on("Memswap:IntentPosted", async ({ event, context }) => {
       intentPostedArgs
     );
 
+    const { tokenIn, tokenOut } = await getTokenDetails(
+      intentPostedInputs.tokenIn,
+      intentPostedInputs.tokenOut,
+      Currency
+    );
+
     await Intent.create({
       id: intentHash,
       data: {
-        tokenIn: intentPostedInputs.tokenIn,
-        tokenOut: intentPostedInputs.tokenOut,
+        tokenIn: tokenIn,
+        tokenOut: tokenOut,
         maker: intentPostedInputs.maker,
         matchmaker: intentPostedInputs.matchmaker,
         deadline: intentPostedInputs.deadline,
@@ -45,7 +50,7 @@ ponder.on("Memswap:IntentCancelled", async ({ event, context }) => {
     data: event.transaction.input,
   });
 
-  const { Intent } = context.entities;
+  const { Intent, Currency } = context.entities;
   const intentCancelledArgs = intentCancelledTx.args;
 
   if (typeof intentCancelledArgs?.[0] === "object") {
@@ -64,11 +69,17 @@ ponder.on("Memswap:IntentCancelled", async ({ event, context }) => {
         },
       });
     } else {
+      const { tokenIn, tokenOut } = await getTokenDetails(
+        intentCancelledInputs.tokenIn,
+        intentCancelledInputs.tokenOut,
+        Currency
+      );
+
       await Intent.create({
         id: event.params.intentHash,
         data: {
-          tokenIn: intentCancelledInputs.tokenIn,
-          tokenOut: intentCancelledInputs.tokenOut,
+          tokenIn: tokenIn,
+          tokenOut: tokenOut,
           maker: intentCancelledInputs.maker,
           matchmaker: intentCancelledInputs.matchmaker,
           deadline: intentCancelledInputs.deadline,
@@ -91,7 +102,7 @@ ponder.on("Memswap:IntentSolved", async ({ event, context }) => {
     data: event.transaction.input,
   });
 
-  const { Intent } = context.entities;
+  const { Intent, Currency } = context.entities;
   const intentSolvedArgs = intentSolvedTx.args;
   if (typeof intentSolvedArgs?.[0] === "object") {
     const intentSolvedInputs = intentSolvedArgs[0];
@@ -110,11 +121,17 @@ ponder.on("Memswap:IntentSolved", async ({ event, context }) => {
         },
       });
     } else {
+      const { tokenIn, tokenOut } = await getTokenDetails(
+        intentSolvedInputs.tokenIn,
+        intentSolvedInputs.tokenOut,
+        Currency
+      );
+
       await Intent.create({
         id: event.params.intentHash,
         data: {
-          tokenIn: intentSolvedInputs.tokenIn,
-          tokenOut: intentSolvedInputs.tokenOut,
+          tokenIn: tokenIn,
+          tokenOut: tokenOut,
           maker: intentSolvedInputs.maker,
           matchmaker: intentSolvedInputs.matchmaker,
           deadline: intentSolvedInputs.deadline,
@@ -132,10 +149,5 @@ ponder.on("Memswap:IntentSolved", async ({ event, context }) => {
 });
 
 ponder.on("Approvals:Approval", async ({ event, context }) => {
-  const client = createPublicClient({
-    chain: mainnet,
-    transport: http(process.env.PONDER_RPC_URL_1),
-  });
-
-  await approvalCheck(event.transaction, context, client, 1);
+  await approvalCheck(event.transaction, context);
 });
