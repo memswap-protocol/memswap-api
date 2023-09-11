@@ -193,6 +193,7 @@ export const approvalCheck = async (
           isPreValidated: false,
           isCancelled: false,
           events: [transaction.hash],
+          amountFilled: BigInt(0),
         },
         update: {
           events: existingIntent

@@ -46,6 +46,7 @@ ponder.on("Memswap:IntentsPosted", async ({ event, context }) => {
         isPreValidated: false,
         isCancelled: false,
         events: [event.transaction.hash],
+        amountFilled: BigInt(0),
       },
     });
   }
@@ -105,6 +106,7 @@ ponder.on("Memswap:IntentCancelled", async ({ event, context }) => {
           isPreValidated: false,
           isCancelled: true,
           events: [event.transaction.hash],
+          amountFilled: BigInt(0),
         },
       });
     }
@@ -127,13 +129,17 @@ ponder.on("Memswap:IntentSolved", async ({ event, context }) => {
       id: event.params.intentHash,
     });
 
+    const intentStatus = await context.contracts.Memswap.read.intentStatus([
+      event.params.intentHash,
+    ]);
+
     if (solvedIntent) {
       await Intent.update({
         id: event.params.intentHash,
         data: {
           events: [...solvedIntent.events, event.transaction.hash],
           isPreValidated: true,
-          amount: event.params.buyAmount,
+          amountFilled: intentStatus[2],
         },
       });
     } else {
@@ -164,6 +170,7 @@ ponder.on("Memswap:IntentSolved", async ({ event, context }) => {
           isPreValidated: true,
           isCancelled: false,
           events: [event.transaction.hash],
+          amountFilled: intentStatus[2],
         },
       });
     }

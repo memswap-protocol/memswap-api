@@ -29,6 +29,7 @@ type Intent @entity {
   isCancelled: Boolean!
   isPreValidated: Boolean!
   events: [String!]!
+  amountFilled: BigInt!
 
   # tokenIn: Currency!
   # tokenOut: Currency!
