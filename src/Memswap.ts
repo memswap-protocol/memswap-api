@@ -1,8 +1,9 @@
 import { ponder } from "@/generated";
-import { decodeFunctionData } from "viem";
+import { decodeFunctionData, encodeFunctionData } from "viem";
 import { approvalCheck, getTokenDetails } from "./helpers";
+import { IntentERC20 } from "./common/types";
 
-ponder.on("Memswap:IntentPosted", async ({ event, context }) => {
+ponder.on("Memswap:IntentsPosted", async ({ event, context }) => {
   const intentPostedTx = decodeFunctionData({
     abi: context.contracts.Memswap.abi,
     data: event.transaction.input,
@@ -12,33 +13,39 @@ ponder.on("Memswap:IntentPosted", async ({ event, context }) => {
   const intentPostedArgs = intentPostedTx.args;
 
   if (typeof intentPostedArgs?.[0] === "object") {
-    const intentPostedInputs = intentPostedArgs[0];
+    const intentPostedInputs: IntentERC20 = (intentPostedArgs[0] as any)[0];
 
-    const intentHash = await context.contracts.Memswap.read.getIntentHash(
-      intentPostedArgs
-    );
+    const intentHash = await context.contracts.Memswap.read.getIntentHash([
+      intentPostedInputs,
+    ]);
 
-    const { tokenIn, tokenOut } = await getTokenDetails(
-      intentPostedInputs.tokenIn,
-      intentPostedInputs.tokenOut,
+    const { sellToken, buyToken } = await getTokenDetails(
+      intentPostedInputs.sellToken,
+      intentPostedInputs.buyToken,
       Currency
     );
 
     await Intent.create({
       id: intentHash,
       data: {
-        tokenIn: tokenIn,
-        tokenOut: tokenOut,
+        isBuy: intentPostedInputs.isBuy,
+        sellToken: sellToken,
+        buyToken: buyToken,
         maker: intentPostedInputs.maker,
         matchmaker: intentPostedInputs.matchmaker,
-        deadline: intentPostedInputs.deadline,
+        source: intentPostedInputs.source,
+        feeBps: intentPostedInputs.feeBps,
+        surplusBps: intentPostedInputs.surplusBps,
+        startTime: intentPostedInputs.startTime,
+        endTime: intentPostedInputs.endTime,
         isPartiallyFillable: intentPostedInputs.isPartiallyFillable,
-        amountIn: intentPostedInputs.amountIn,
-        endAmountOut: intentPostedInputs.endAmountOut,
-        events: [event.transaction.hash],
+        amount: intentPostedInputs.amount,
+        endAmount: intentPostedInputs.endAmount,
+        startAmountBps: intentPostedInputs.startAmountBps,
+        expectedAmountBps: intentPostedInputs.expectedAmountBps,
+        isPreValidated: false,
         isCancelled: false,
-        isValidated: false,
-        amountFilled: BigInt(0),
+        events: [event.transaction.hash],
       },
     });
   }
@@ -54,7 +61,9 @@ ponder.on("Memswap:IntentCancelled", async ({ event, context }) => {
   const intentCancelledArgs = intentCancelledTx.args;
 
   if (typeof intentCancelledArgs?.[0] === "object") {
-    const intentCancelledInputs = intentCancelledArgs[0];
+    const intentCancelledInputs: IntentERC20 = (
+      intentCancelledArgs[0] as any
+    )[0];
 
     const cancelledIntent = await Intent.findUnique({
       id: event.params.intentHash,
@@ -69,27 +78,33 @@ ponder.on("Memswap:IntentCancelled", async ({ event, context }) => {
         },
       });
     } else {
-      const { tokenIn, tokenOut } = await getTokenDetails(
-        intentCancelledInputs.tokenIn,
-        intentCancelledInputs.tokenOut,
+      const { sellToken, buyToken } = await getTokenDetails(
+        intentCancelledInputs.sellToken,
+        intentCancelledInputs.buyToken,
         Currency
       );
 
       await Intent.create({
         id: event.params.intentHash,
         data: {
-          tokenIn: tokenIn,
-          tokenOut: tokenOut,
+          isBuy: intentCancelledInputs.isBuy,
+          sellToken: sellToken,
+          buyToken: buyToken,
           maker: intentCancelledInputs.maker,
           matchmaker: intentCancelledInputs.matchmaker,
-          deadline: intentCancelledInputs.deadline,
+          source: intentCancelledInputs.source,
+          feeBps: intentCancelledInputs.feeBps,
+          surplusBps: intentCancelledInputs.surplusBps,
+          startTime: intentCancelledInputs.startTime,
+          endTime: intentCancelledInputs.endTime,
           isPartiallyFillable: intentCancelledInputs.isPartiallyFillable,
-          amountIn: intentCancelledInputs.amountIn,
-          endAmountOut: intentCancelledInputs.endAmountOut,
-          events: [event.transaction.hash],
+          amount: intentCancelledInputs.amount,
+          endAmount: intentCancelledInputs.endAmount,
+          startAmountBps: intentCancelledInputs.startAmountBps,
+          expectedAmountBps: intentCancelledInputs.expectedAmountBps,
+          isPreValidated: false,
           isCancelled: true,
-          isValidated: false,
-          amountFilled: BigInt(0),
+          events: [event.transaction.hash],
         },
       });
     }
@@ -104,8 +119,9 @@ ponder.on("Memswap:IntentSolved", async ({ event, context }) => {
 
   const { Intent, Currency } = context.entities;
   const intentSolvedArgs = intentSolvedTx.args;
+
   if (typeof intentSolvedArgs?.[0] === "object") {
-    const intentSolvedInputs = intentSolvedArgs[0];
+    const intentSolvedInputs: IntentERC20 = (intentSolvedArgs[0] as any)[0];
 
     const solvedIntent = await Intent.findUnique({
       id: event.params.intentHash,
@@ -116,32 +132,38 @@ ponder.on("Memswap:IntentSolved", async ({ event, context }) => {
         id: event.params.intentHash,
         data: {
           events: [...solvedIntent.events, event.transaction.hash],
-          isValidated: true,
-          amountFilled: event.params.amountOut,
+          isPreValidated: true,
+          amount: event.params.buyAmount,
         },
       });
     } else {
-      const { tokenIn, tokenOut } = await getTokenDetails(
-        intentSolvedInputs.tokenIn,
-        intentSolvedInputs.tokenOut,
+      const { sellToken, buyToken } = await getTokenDetails(
+        event.params.sellToken,
+        event.params.buyToken,
         Currency
       );
 
       await Intent.create({
         id: event.params.intentHash,
         data: {
-          tokenIn: tokenIn,
-          tokenOut: tokenOut,
+          isBuy: intentSolvedInputs.isBuy,
+          sellToken: sellToken,
+          buyToken: buyToken,
           maker: intentSolvedInputs.maker,
           matchmaker: intentSolvedInputs.matchmaker,
-          deadline: intentSolvedInputs.deadline,
+          source: intentSolvedInputs.source,
+          feeBps: intentSolvedInputs.feeBps,
+          surplusBps: intentSolvedInputs.surplusBps,
+          startTime: intentSolvedInputs.startTime,
+          endTime: intentSolvedInputs.endTime,
           isPartiallyFillable: intentSolvedInputs.isPartiallyFillable,
-          amountIn: intentSolvedInputs.amountIn,
-          endAmountOut: intentSolvedInputs.endAmountOut,
-          events: [event.transaction.hash],
+          amount: intentSolvedInputs.amount,
+          endAmount: intentSolvedInputs.endAmount,
+          startAmountBps: intentSolvedInputs.startAmountBps,
+          expectedAmountBps: intentSolvedInputs.expectedAmountBps,
+          isPreValidated: true,
           isCancelled: false,
-          isValidated: true,
-          amountFilled: intentSolvedInputs.amountIn,
+          events: [event.transaction.hash],
         },
       });
     }

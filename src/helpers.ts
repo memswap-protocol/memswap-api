@@ -9,12 +9,12 @@ import {
   zeroAddress,
 } from "viem";
 import {
-  MEMSWAP,
+  MEMSWAP_ERC20,
   MEMSWAP_WETH,
   MemswapChains,
   REGULAR_WETH,
 } from "./common/constants";
-import { AddressType, MatchmakerIntent } from "./common/types";
+import { AddressType, IntentERC20, Protocol } from "./common/types";
 import { getEIP712Domain, getEIP712TypesForIntent } from "./common/utils";
 import { Transaction } from "@ponder/core";
 import { Currency, WETH9, Token, Ether } from "@uniswap/sdk-core";
@@ -55,17 +55,18 @@ export const approvalCheck = async (
 
     if (
       approvalTx.args &&
-      (spender === MEMSWAP[chain.id] || spender === MEMSWAP_WETH[chain.id])
+      (spender === MEMSWAP_ERC20[chain.id] ||
+        spender === MEMSWAP_WETH[chain.id])
     ) {
       restOfCalldata = `0x${transaction.input.slice(2 + 2 * (4 + 32 + 32))}`;
       approvalTxHash = transaction.hash;
     }
 
-    let intent: MatchmakerIntent | undefined;
+    let intent: IntentERC20 | undefined;
     if (restOfCalldata && restOfCalldata.length > 2) {
       try {
         const intentTypes =
-          "address, address, address, address, address, uint16, uint16, uint32, bool, uint128, uint128, uint16, uint16, bytes";
+          "uint8, address, address, address, address, address, uint16, uint16, uint32, uint32, uint256, bool, uint128, uint128, uint16, uint16, bool, bytes";
 
         const result = decodeAbiParameters(
           parseAbiParameters(intentTypes),
@@ -73,21 +74,25 @@ export const approvalCheck = async (
         );
 
         intent = {
-          tokenIn: result[0].toLowerCase(),
-          tokenOut: result[1].toLowerCase(),
-          maker: result[2].toLowerCase(),
-          matchmaker: result[3].toLowerCase(),
-          source: result[4].toLowerCase(),
-          feeBps: result[5],
-          surplusBps: result[6],
-          deadline: result[7],
-          isPartiallyFillable: result[8],
-          amountIn: result[9].toString(),
-          endAmountOut: result[10].toString(),
-          startAmountBps: result[11],
-          expectedAmountBps: result[12],
-          signature: result[13].toLowerCase(),
-        };
+          isBuy: Boolean(result[0]),
+          buyToken: result[1].toLowerCase(),
+          sellToken: result[2].toLowerCase(),
+          maker: result[3].toLowerCase(),
+          matchmaker: result[4].toLowerCase(),
+          source: result[5].toLowerCase(),
+          feeBps: result[6],
+          surplusBps: result[7],
+          startTime: result[8],
+          endTime: result[9],
+          nonce: result[10].toString(),
+          isPartiallyFillable: result[11],
+          amount: result[12],
+          endAmount: result[13],
+          startAmountBps: result[14],
+          expectedAmountBps: result[15],
+          hasDynamicSignature: result[16],
+          signature: result[17].toLowerCase(),
+        } as IntentERC20;
       } catch {
         // Skip errors
       }
@@ -102,8 +107,8 @@ export const approvalCheck = async (
       // Check the signature first
       const valid = await client.verifyTypedData({
         address: intent.maker as AddressType,
-        domain: getEIP712Domain(chain.id),
-        types: getEIP712TypesForIntent(),
+        domain: getEIP712Domain(chain.id, Protocol.ERC20),
+        types: getEIP712TypesForIntent(Protocol.ERC20),
         primaryType: "Intent",
         message: intent,
         signature: intent.signature as AddressType,
@@ -115,32 +120,51 @@ export const approvalCheck = async (
 
       const { Intent, Currency } = context.entities;
 
-      const intentHash = await client.readContract({
-        ...context.contracts.Memswap,
-        functionName: "getIntentHash",
-        args: [
-          {
-            tokenIn: intent.tokenIn as AddressType,
-            tokenOut: intent.tokenOut as AddressType,
-            maker: intent.maker as AddressType,
-            matchmaker: intent.matchmaker as AddressType,
-            source: intent.source as AddressType,
-            feeBps: intent.feeBps,
-            surplusBps: intent.surplusBps,
-            deadline: intent.deadline,
-            isPartiallyFillable: intent.isPartiallyFillable,
-            amountIn: BigInt(intent.amountIn),
-            endAmountOut: BigInt(intent.endAmountOut),
-            startAmountBps: intent.startAmountBps,
-            expectedAmountBps: intent.expectedAmountBps,
-            signature: intent.signature as AddressType,
-          },
-        ],
-      });
+      const data = {
+        isBuy: intent.isBuy,
+        buyToken: intent.buyToken,
+        sellToken: intent.sellToken,
+        maker: intent.maker,
+        matchmaker: intent.matchmaker,
+        source: intent.source,
+        feeBps: intent.feeBps,
+        surplusBps: intent.surplusBps,
+        startTime: intent.startTime,
+        endTime: intent.endTime,
+        isPartiallyFillable: intent.isPartiallyFillable,
+        amount: intent.amount,
+        endAmount: intent.endAmount,
+        startAmountBps: intent.startAmountBps,
+        expectedAmountBps: intent.expectedAmountBps,
+        hasDynamicSignature: intent.hasDynamicSignature,
+        signature: intent.signature,
+      };
 
-      const { tokenIn, tokenOut } = await getTokenDetails(
-        intent.tokenIn as `0x${string}`,
-        intent.tokenOut as `0x${string}`,
+      const intentHash = await context.contracts.Memswap.read.getIntentHash([
+        {
+          isBuy: intent.isBuy,
+          buyToken: intent.buyToken,
+          sellToken: intent.sellToken,
+          maker: intent.maker,
+          matchmaker: intent.matchmaker,
+          source: intent.source,
+          feeBps: intent.feeBps,
+          surplusBps: intent.surplusBps,
+          startTime: intent.startTime,
+          endTime: intent.endTime,
+          isPartiallyFillable: intent.isPartiallyFillable,
+          amount: intent.amount,
+          endAmount: intent.endAmount,
+          startAmountBps: intent.startAmountBps,
+          expectedAmountBps: intent.expectedAmountBps,
+          hasDynamicSignature: intent.hasDynamicSignature,
+          signature: intent.signature,
+        },
+      ]);
+
+      const { sellToken, buyToken } = await getTokenDetails(
+        intent.sellToken,
+        intent.buyToken,
         Currency
       );
 
@@ -151,18 +175,24 @@ export const approvalCheck = async (
       await Intent.upsert({
         id: intentHash,
         create: {
-          tokenIn: tokenIn,
-          tokenOut: tokenOut,
+          isBuy: intent.isBuy,
+          sellToken: sellToken,
+          buyToken: buyToken,
           maker: intent.maker,
           matchmaker: intent.matchmaker,
-          deadline: intent.deadline,
+          source: intent.source,
+          feeBps: intent.feeBps,
+          surplusBps: intent.surplusBps,
+          startTime: intent.startTime,
+          endTime: intent.endTime,
           isPartiallyFillable: intent.isPartiallyFillable,
-          amountIn: BigInt(intent.amountIn),
-          endAmountOut: BigInt(intent.endAmountOut),
-          events: [transaction.hash],
+          amount: intent.amount,
+          endAmount: intent.endAmount,
+          startAmountBps: intent.startAmountBps,
+          expectedAmountBps: intent.expectedAmountBps,
+          isPreValidated: false,
           isCancelled: false,
-          isValidated: false,
-          amountFilled: BigInt(0),
+          events: [transaction.hash],
         },
         update: {
           events: existingIntent
@@ -207,41 +237,49 @@ export const getToken = async (address: `0x${string}`): Promise<Currency> => {
 };
 
 export const getTokenDetails = async (
-  tokenInAddress: `0x${string}`,
-  tokenOutAddress: `0x${string}`,
+  sellTokenAddress: `0x${string}`,
+  buyTokenAddress: `0x${string}`,
   Currency: Context["entities"]["Currency"]
-): Promise<{ tokenIn: string; tokenOut: string }> => {
-  const tokenInInfo = await getToken(tokenInAddress);
+): Promise<{ sellToken: string; buyToken: string }> => {
+  const sellTokenInfo = await getToken(sellTokenAddress);
 
-  const tokenIn = await Currency.upsert({
-    id: tokenInAddress as string,
+  if (!sellTokenInfo) {
+    throw new Error("No token info");
+  }
+
+  const sellToken = await Currency.upsert({
+    id: sellTokenAddress as string,
     create: {
-      isNative: tokenInInfo.isNative,
-      isToken: tokenInInfo.isToken,
-      chainId: tokenInInfo.chainId,
-      decimals: tokenInInfo.decimals,
-      symbol: tokenInInfo.symbol,
-      name: tokenInInfo.name,
-      address: (tokenInInfo as Token)?.address,
+      isNative: sellTokenInfo.isNative,
+      isToken: sellTokenInfo.isToken,
+      chainId: sellTokenInfo.chainId,
+      decimals: sellTokenInfo.decimals,
+      symbol: sellTokenInfo.symbol,
+      name: sellTokenInfo.name,
+      address: (sellTokenInfo as Token)?.address,
     },
     update: {},
   });
 
-  const tokenOutInfo = await getToken(tokenOutAddress);
+  const buyTokenInfo = await getToken(buyTokenAddress);
 
-  const tokenOut = await Currency.upsert({
-    id: tokenOutAddress as string,
+  if (!buyTokenInfo) {
+    throw new Error("No token info");
+  }
+
+  const buyToken = await Currency.upsert({
+    id: buyTokenAddress as string,
     create: {
-      isNative: tokenOutInfo.isNative,
-      isToken: tokenOutInfo.isToken,
-      chainId: tokenOutInfo.chainId,
-      decimals: tokenOutInfo.decimals,
-      symbol: tokenOutInfo.symbol,
-      name: tokenOutInfo.name,
-      address: (tokenOutInfo as Token)?.address,
+      isNative: buyTokenInfo.isNative,
+      isToken: buyTokenInfo.isToken,
+      chainId: buyTokenInfo.chainId,
+      decimals: buyTokenInfo.decimals,
+      symbol: buyTokenInfo.symbol,
+      name: buyTokenInfo.name,
+      address: (buyTokenInfo as Token)?.address,
     },
     update: {},
   });
 
-  return { tokenIn: tokenIn.id, tokenOut: tokenOut.id };
+  return { sellToken: sellToken.id, buyToken: buyToken.id };
 };

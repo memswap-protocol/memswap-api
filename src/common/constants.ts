@@ -3,9 +3,14 @@ import { Chain, goerli, mainnet } from "viem/chains";
 import { Assign } from "viem/dist/types/types/utils";
 import { ChainConfig, ChainFormatters } from "viem/dist/types/types/chain";
 
-export const MEMSWAP: ChainIdToAddress = {
+export const MEMSWAP_ERC20: ChainIdToAddress = {
   1: "0x63c9362a7bedc92dec83433c15d623fbd3e1e5a9",
-  5: "0x62E309AdCF935D62f824081148798eF8A7466b66",
+  5: "0xd8c0e3287ba121925987baa85338b8a87574789e",
+};
+
+export const MEMSWAP_ERC721: ChainIdToAddress = {
+  1: "0x",
+  5: "0xcc22e868f4e7fb16cdcbfc70dbdd2716c92f8862",
 };
 
 export const MEMSWAP_WETH: ChainIdToAddress = {

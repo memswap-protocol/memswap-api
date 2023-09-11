@@ -1,21 +1,32 @@
 [
-  { "inputs": [], "stateMutability": "nonpayable", "type": "constructor" },
-  { "inputs": [], "name": "AuthorizationIsExpired", "type": "error" },
-  { "inputs": [], "name": "AuthorizationIsInsufficient", "type": "error" },
   {
-    "inputs": [],
-    "name": "AuthorizationIsNotPartiallyFillable",
-    "type": "error"
+    "inputs": [
+      {
+        "internalType": "address",
+        "name": "permit2Address",
+        "type": "address"
+      },
+      { "internalType": "address", "name": "usdcAddress", "type": "address" }
+    ],
+    "stateMutability": "nonpayable",
+    "type": "constructor"
   },
+  { "inputs": [], "name": "AmountCheckFailed", "type": "error" },
+  { "inputs": [], "name": "AuthorizationAmountMismatch", "type": "error" },
+  { "inputs": [], "name": "AuthorizationIsExpired", "type": "error" },
+  { "inputs": [], "name": "IntentCannotBePrevalidated", "type": "error" },
   { "inputs": [], "name": "IntentIsCancelled", "type": "error" },
   { "inputs": [], "name": "IntentIsExpired", "type": "error" },
   { "inputs": [], "name": "IntentIsFilled", "type": "error" },
   { "inputs": [], "name": "IntentIsNotPartiallyFillable", "type": "error" },
+  { "inputs": [], "name": "IntentIsNotStarted", "type": "error" },
+  { "inputs": [], "name": "InvalidFillAmount", "type": "error" },
   { "inputs": [], "name": "InvalidSignature", "type": "error" },
   { "inputs": [], "name": "InvalidSolution", "type": "error" },
+  { "inputs": [], "name": "InvalidStartAndEndTimes", "type": "error" },
   { "inputs": [], "name": "MerkleTreeTooLarge", "type": "error" },
   { "inputs": [], "name": "Unauthorized", "type": "error" },
-  { "inputs": [], "name": "UnsuccessfullCall", "type": "error" },
+  { "inputs": [], "name": "UnsuccessfulCall", "type": "error" },
   {
     "anonymous": false,
     "inputs": [
@@ -29,7 +40,19 @@
     "name": "IntentCancelled",
     "type": "event"
   },
-  { "anonymous": false, "inputs": [], "name": "IntentPosted", "type": "event" },
+  {
+    "anonymous": false,
+    "inputs": [
+      {
+        "indexed": true,
+        "internalType": "bytes32",
+        "name": "intentHash",
+        "type": "bytes32"
+      }
+    ],
+    "name": "IntentPrevalidated",
+    "type": "event"
+  },
   {
     "anonymous": false,
     "inputs": [
@@ -41,14 +64,20 @@
       },
       {
         "indexed": false,
+        "internalType": "bool",
+        "name": "isBuy",
+        "type": "bool"
+      },
+      {
+        "indexed": false,
         "internalType": "address",
-        "name": "tokenIn",
+        "name": "buyToken",
         "type": "address"
       },
       {
         "indexed": false,
         "internalType": "address",
-        "name": "tokenOut",
+        "name": "sellToken",
         "type": "address"
       },
       {
@@ -66,13 +95,13 @@
       {
         "indexed": false,
         "internalType": "uint128",
-        "name": "amountIn",
+        "name": "buyAmount",
         "type": "uint128"
       },
       {
         "indexed": false,
         "internalType": "uint128",
-        "name": "amountOut",
+        "name": "sellAmount",
         "type": "uint128"
       }
     ],
@@ -81,15 +110,27 @@
   },
   {
     "anonymous": false,
+    "inputs": [],
+    "name": "IntentsPosted",
+    "type": "event"
+  },
+  {
+    "anonymous": false,
     "inputs": [
       {
-        "indexed": true,
-        "internalType": "bytes32",
-        "name": "intentHash",
-        "type": "bytes32"
+        "indexed": false,
+        "internalType": "address",
+        "name": "maker",
+        "type": "address"
+      },
+      {
+        "indexed": false,
+        "internalType": "uint256",
+        "name": "newNonce",
+        "type": "uint256"
       }
     ],
-    "name": "IntentValidated",
+    "name": "NonceIncremented",
     "type": "event"
   },
   {
@@ -117,10 +158,17 @@
     "inputs": [{ "internalType": "bytes32", "name": "", "type": "bytes32" }],
     "name": "authorization",
     "outputs": [
-      { "internalType": "uint128", "name": "maxAmountIn", "type": "uint128" },
-      { "internalType": "uint128", "name": "minAmountOut", "type": "uint128" },
-      { "internalType": "uint32", "name": "blockDeadline", "type": "uint32" },
-      { "internalType": "bool", "name": "isPartiallyFillable", "type": "bool" }
+      {
+        "internalType": "uint128",
+        "name": "fillAmountToCheck",
+        "type": "uint128"
+      },
+      {
+        "internalType": "uint128",
+        "name": "executeAmountToCheck",
+        "type": "uint128"
+      },
+      { "internalType": "uint32", "name": "blockDeadline", "type": "uint32" }
     ],
     "stateMutability": "view",
     "type": "function"
@@ -129,16 +177,9 @@
     "inputs": [
       {
         "components": [
-          {
-            "internalType": "contract IERC20",
-            "name": "tokenIn",
-            "type": "address"
-          },
-          {
-            "internalType": "contract IERC20",
-            "name": "tokenOut",
-            "type": "address"
-          },
+          { "internalType": "bool", "name": "isBuy", "type": "bool" },
+          { "internalType": "address", "name": "buyToken", "type": "address" },
+          { "internalType": "address", "name": "sellToken", "type": "address" },
           { "internalType": "address", "name": "maker", "type": "address" },
           {
             "internalType": "address",
@@ -148,18 +189,15 @@
           { "internalType": "address", "name": "source", "type": "address" },
           { "internalType": "uint16", "name": "feeBps", "type": "uint16" },
           { "internalType": "uint16", "name": "surplusBps", "type": "uint16" },
-          { "internalType": "uint32", "name": "deadline", "type": "uint32" },
+          { "internalType": "uint32", "name": "startTime", "type": "uint32" },
+          { "internalType": "uint32", "name": "endTime", "type": "uint32" },
           {
             "internalType": "bool",
             "name": "isPartiallyFillable",
             "type": "bool"
           },
-          { "internalType": "uint128", "name": "amountIn", "type": "uint128" },
-          {
-            "internalType": "uint128",
-            "name": "endAmountOut",
-            "type": "uint128"
-          },
+          { "internalType": "uint128", "name": "amount", "type": "uint128" },
+          { "internalType": "uint128", "name": "endAmount", "type": "uint128" },
           {
             "internalType": "uint16",
             "name": "startAmountBps",
@@ -170,44 +208,40 @@
             "name": "expectedAmountBps",
             "type": "uint16"
           },
+          {
+            "internalType": "bool",
+            "name": "hasDynamicSignature",
+            "type": "bool"
+          },
           { "internalType": "bytes", "name": "signature", "type": "bytes" }
         ],
-        "internalType": "struct Memswap.Intent",
-        "name": "intent",
-        "type": "tuple"
-      },
-      {
-        "internalType": "address",
-        "name": "authorizedSolver",
-        "type": "address"
+        "internalType": "struct MemswapERC20.Intent[]",
+        "name": "intents",
+        "type": "tuple[]"
       },
       {
         "components": [
           {
             "internalType": "uint128",
-            "name": "maxAmountIn",
+            "name": "fillAmountToCheck",
             "type": "uint128"
           },
           {
             "internalType": "uint128",
-            "name": "minAmountOut",
+            "name": "executeAmountToCheck",
             "type": "uint128"
           },
           {
             "internalType": "uint32",
             "name": "blockDeadline",
             "type": "uint32"
-          },
-          {
-            "internalType": "bool",
-            "name": "isPartiallyFillable",
-            "type": "bool"
           }
         ],
-        "internalType": "struct Memswap.Authorization",
-        "name": "auth",
-        "type": "tuple"
-      }
+        "internalType": "struct MemswapERC20.Authorization[]",
+        "name": "auths",
+        "type": "tuple[]"
+      },
+      { "internalType": "address", "name": "solver", "type": "address" }
     ],
     "name": "authorize",
     "outputs": [],
@@ -218,16 +252,9 @@
     "inputs": [
       {
         "components": [
-          {
-            "internalType": "contract IERC20",
-            "name": "tokenIn",
-            "type": "address"
-          },
-          {
-            "internalType": "contract IERC20",
-            "name": "tokenOut",
-            "type": "address"
-          },
+          { "internalType": "bool", "name": "isBuy", "type": "bool" },
+          { "internalType": "address", "name": "buyToken", "type": "address" },
+          { "internalType": "address", "name": "sellToken", "type": "address" },
           { "internalType": "address", "name": "maker", "type": "address" },
           {
             "internalType": "address",
@@ -237,18 +264,15 @@
           { "internalType": "address", "name": "source", "type": "address" },
           { "internalType": "uint16", "name": "feeBps", "type": "uint16" },
           { "internalType": "uint16", "name": "surplusBps", "type": "uint16" },
-          { "internalType": "uint32", "name": "deadline", "type": "uint32" },
+          { "internalType": "uint32", "name": "startTime", "type": "uint32" },
+          { "internalType": "uint32", "name": "endTime", "type": "uint32" },
           {
             "internalType": "bool",
             "name": "isPartiallyFillable",
             "type": "bool"
           },
-          { "internalType": "uint128", "name": "amountIn", "type": "uint128" },
-          {
-            "internalType": "uint128",
-            "name": "endAmountOut",
-            "type": "uint128"
-          },
+          { "internalType": "uint128", "name": "amount", "type": "uint128" },
+          { "internalType": "uint128", "name": "endAmount", "type": "uint128" },
           {
             "internalType": "uint16",
             "name": "startAmountBps",
@@ -259,9 +283,14 @@
             "name": "expectedAmountBps",
             "type": "uint16"
           },
+          {
+            "internalType": "bool",
+            "name": "hasDynamicSignature",
+            "type": "bool"
+          },
           { "internalType": "bytes", "name": "signature", "type": "bytes" }
         ],
-        "internalType": "struct Memswap.Intent[]",
+        "internalType": "struct MemswapERC20.Intent[]",
         "name": "intents",
         "type": "tuple[]"
       }
@@ -274,35 +303,26 @@
   {
     "inputs": [
       { "internalType": "bytes32", "name": "intentHash", "type": "bytes32" },
-      {
-        "internalType": "address",
-        "name": "authorizedSolver",
-        "type": "address"
-      },
+      { "internalType": "address", "name": "solver", "type": "address" },
       {
         "components": [
           {
             "internalType": "uint128",
-            "name": "maxAmountIn",
+            "name": "fillAmountToCheck",
             "type": "uint128"
           },
           {
             "internalType": "uint128",
-            "name": "minAmountOut",
+            "name": "executeAmountToCheck",
             "type": "uint128"
           },
           {
             "internalType": "uint32",
             "name": "blockDeadline",
             "type": "uint32"
-          },
-          {
-            "internalType": "bool",
-            "name": "isPartiallyFillable",
-            "type": "bool"
           }
         ],
-        "internalType": "struct Memswap.Authorization",
+        "internalType": "struct MemswapERC20.Authorization",
         "name": "auth",
         "type": "tuple"
       }
@@ -322,16 +342,9 @@
     "inputs": [
       {
         "components": [
-          {
-            "internalType": "contract IERC20",
-            "name": "tokenIn",
-            "type": "address"
-          },
-          {
-            "internalType": "contract IERC20",
-            "name": "tokenOut",
-            "type": "address"
-          },
+          { "internalType": "bool", "name": "isBuy", "type": "bool" },
+          { "internalType": "address", "name": "buyToken", "type": "address" },
+          { "internalType": "address", "name": "sellToken", "type": "address" },
           { "internalType": "address", "name": "maker", "type": "address" },
           {
             "internalType": "address",
@@ -341,18 +354,15 @@
           { "internalType": "address", "name": "source", "type": "address" },
           { "internalType": "uint16", "name": "feeBps", "type": "uint16" },
           { "internalType": "uint16", "name": "surplusBps", "type": "uint16" },
-          { "internalType": "uint32", "name": "deadline", "type": "uint32" },
+          { "internalType": "uint32", "name": "startTime", "type": "uint32" },
+          { "internalType": "uint32", "name": "endTime", "type": "uint32" },
           {
             "internalType": "bool",
             "name": "isPartiallyFillable",
             "type": "bool"
           },
-          { "internalType": "uint128", "name": "amountIn", "type": "uint128" },
-          {
-            "internalType": "uint128",
-            "name": "endAmountOut",
-            "type": "uint128"
-          },
+          { "internalType": "uint128", "name": "amount", "type": "uint128" },
+          { "internalType": "uint128", "name": "endAmount", "type": "uint128" },
           {
             "internalType": "uint16",
             "name": "startAmountBps",
@@ -363,9 +373,14 @@
             "name": "expectedAmountBps",
             "type": "uint16"
           },
+          {
+            "internalType": "bool",
+            "name": "hasDynamicSignature",
+            "type": "bool"
+          },
           { "internalType": "bytes", "name": "signature", "type": "bytes" }
         ],
-        "internalType": "struct Memswap.Intent",
+        "internalType": "struct MemswapERC20.Intent",
         "name": "intent",
         "type": "tuple"
       }
@@ -378,10 +393,17 @@
     "type": "function"
   },
   {
+    "inputs": [],
+    "name": "incrementNonce",
+    "outputs": [],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
     "inputs": [{ "internalType": "bytes32", "name": "", "type": "bytes32" }],
     "name": "intentStatus",
     "outputs": [
-      { "internalType": "bool", "name": "isValidated", "type": "bool" },
+      { "internalType": "bool", "name": "isPrevalidated", "type": "bool" },
       { "internalType": "bool", "name": "isCancelled", "type": "bool" },
       { "internalType": "uint128", "name": "amountFilled", "type": "uint128" }
     ],
@@ -389,19 +411,26 @@
     "type": "function"
   },
   {
+    "inputs": [{ "internalType": "address", "name": "", "type": "address" }],
+    "name": "nonce",
+    "outputs": [{ "internalType": "uint256", "name": "", "type": "uint256" }],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [],
+    "name": "permit2",
+    "outputs": [{ "internalType": "address", "name": "", "type": "address" }],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
     "inputs": [
       {
         "components": [
-          {
-            "internalType": "contract IERC20",
-            "name": "tokenIn",
-            "type": "address"
-          },
-          {
-            "internalType": "contract IERC20",
-            "name": "tokenOut",
-            "type": "address"
-          },
+          { "internalType": "bool", "name": "isBuy", "type": "bool" },
+          { "internalType": "address", "name": "buyToken", "type": "address" },
+          { "internalType": "address", "name": "sellToken", "type": "address" },
           { "internalType": "address", "name": "maker", "type": "address" },
           {
             "internalType": "address",
@@ -411,18 +440,15 @@
           { "internalType": "address", "name": "source", "type": "address" },
           { "internalType": "uint16", "name": "feeBps", "type": "uint16" },
           { "internalType": "uint16", "name": "surplusBps", "type": "uint16" },
-          { "internalType": "uint32", "name": "deadline", "type": "uint32" },
+          { "internalType": "uint32", "name": "startTime", "type": "uint32" },
+          { "internalType": "uint32", "name": "endTime", "type": "uint32" },
           {
             "internalType": "bool",
             "name": "isPartiallyFillable",
             "type": "bool"
           },
-          { "internalType": "uint128", "name": "amountIn", "type": "uint128" },
-          {
-            "internalType": "uint128",
-            "name": "endAmountOut",
-            "type": "uint128"
-          },
+          { "internalType": "uint128", "name": "amount", "type": "uint128" },
+          { "internalType": "uint128", "name": "endAmount", "type": "uint128" },
           {
             "internalType": "uint16",
             "name": "startAmountBps",
@@ -433,11 +459,16 @@
             "name": "expectedAmountBps",
             "type": "uint16"
           },
+          {
+            "internalType": "bool",
+            "name": "hasDynamicSignature",
+            "type": "bool"
+          },
           { "internalType": "bytes", "name": "signature", "type": "bytes" }
         ],
-        "internalType": "struct Memswap.Intent",
+        "internalType": "struct MemswapERC20.Intent[]",
         "name": "",
-        "type": "tuple"
+        "type": "tuple[]"
       }
     ],
     "name": "post",
@@ -449,16 +480,9 @@
     "inputs": [
       {
         "components": [
-          {
-            "internalType": "contract IERC20",
-            "name": "tokenIn",
-            "type": "address"
-          },
-          {
-            "internalType": "contract IERC20",
-            "name": "tokenOut",
-            "type": "address"
-          },
+          { "internalType": "bool", "name": "isBuy", "type": "bool" },
+          { "internalType": "address", "name": "buyToken", "type": "address" },
+          { "internalType": "address", "name": "sellToken", "type": "address" },
           { "internalType": "address", "name": "maker", "type": "address" },
           {
             "internalType": "address",
@@ -468,18 +492,15 @@
           { "internalType": "address", "name": "source", "type": "address" },
           { "internalType": "uint16", "name": "feeBps", "type": "uint16" },
           { "internalType": "uint16", "name": "surplusBps", "type": "uint16" },
-          { "internalType": "uint32", "name": "deadline", "type": "uint32" },
+          { "internalType": "uint32", "name": "startTime", "type": "uint32" },
+          { "internalType": "uint32", "name": "endTime", "type": "uint32" },
           {
             "internalType": "bool",
             "name": "isPartiallyFillable",
             "type": "bool"
           },
-          { "internalType": "uint128", "name": "amountIn", "type": "uint128" },
-          {
-            "internalType": "uint128",
-            "name": "endAmountOut",
-            "type": "uint128"
-          },
+          { "internalType": "uint128", "name": "amount", "type": "uint128" },
+          { "internalType": "uint128", "name": "endAmount", "type": "uint128" },
           {
             "internalType": "uint16",
             "name": "startAmountBps",
@@ -490,21 +511,99 @@
             "name": "expectedAmountBps",
             "type": "uint16"
           },
+          {
+            "internalType": "bool",
+            "name": "hasDynamicSignature",
+            "type": "bool"
+          },
           { "internalType": "bytes", "name": "signature", "type": "bytes" }
         ],
-        "internalType": "struct Memswap.Intent",
-        "name": "intent",
+        "internalType": "struct MemswapERC20.Intent[]",
+        "name": "intents",
+        "type": "tuple[]"
+      }
+    ],
+    "name": "prevalidate",
+    "outputs": [],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "components": [
+          { "internalType": "bool", "name": "isBuy", "type": "bool" },
+          { "internalType": "address", "name": "buyToken", "type": "address" },
+          { "internalType": "address", "name": "sellToken", "type": "address" },
+          { "internalType": "address", "name": "maker", "type": "address" },
+          {
+            "internalType": "address",
+            "name": "matchmaker",
+            "type": "address"
+          },
+          { "internalType": "address", "name": "source", "type": "address" },
+          { "internalType": "uint16", "name": "feeBps", "type": "uint16" },
+          { "internalType": "uint16", "name": "surplusBps", "type": "uint16" },
+          { "internalType": "uint32", "name": "startTime", "type": "uint32" },
+          { "internalType": "uint32", "name": "endTime", "type": "uint32" },
+          {
+            "internalType": "bool",
+            "name": "isPartiallyFillable",
+            "type": "bool"
+          },
+          { "internalType": "uint128", "name": "amount", "type": "uint128" },
+          { "internalType": "uint128", "name": "endAmount", "type": "uint128" },
+          {
+            "internalType": "uint16",
+            "name": "startAmountBps",
+            "type": "uint16"
+          },
+          {
+            "internalType": "uint16",
+            "name": "expectedAmountBps",
+            "type": "uint16"
+          },
+          {
+            "internalType": "bool",
+            "name": "hasDynamicSignature",
+            "type": "bool"
+          },
+          { "internalType": "bytes", "name": "signature", "type": "bytes" }
+        ],
+        "internalType": "struct MemswapERC20.Intent[]",
+        "name": "intents",
+        "type": "tuple[]"
+      },
+      {
+        "components": [
+          { "internalType": "bytes", "name": "data", "type": "bytes" },
+          {
+            "internalType": "uint128[]",
+            "name": "fillAmounts",
+            "type": "uint128[]"
+          },
+          {
+            "internalType": "uint128[]",
+            "name": "executeAmounts",
+            "type": "uint128[]"
+          }
+        ],
+        "internalType": "struct MemswapERC20.Solution",
+        "name": "solution",
         "type": "tuple"
       },
       {
         "components": [
-          { "internalType": "address", "name": "to", "type": "address" },
-          { "internalType": "bytes", "name": "data", "type": "bytes" },
-          { "internalType": "uint128", "name": "amount", "type": "uint128" }
+          {
+            "internalType": "enum PermitExecutor.Kind",
+            "name": "kind",
+            "type": "uint8"
+          },
+          { "internalType": "bytes", "name": "data", "type": "bytes" }
         ],
-        "internalType": "struct Memswap.Solution",
-        "name": "solution",
-        "type": "tuple"
+        "internalType": "struct PermitExecutor.Permit[]",
+        "name": "permits",
+        "type": "tuple[]"
       }
     ],
     "name": "solve",
@@ -516,16 +615,9 @@
     "inputs": [
       {
         "components": [
-          {
-            "internalType": "contract IERC20",
-            "name": "tokenIn",
-            "type": "address"
-          },
-          {
-            "internalType": "contract IERC20",
-            "name": "tokenOut",
-            "type": "address"
-          },
+          { "internalType": "bool", "name": "isBuy", "type": "bool" },
+          { "internalType": "address", "name": "buyToken", "type": "address" },
+          { "internalType": "address", "name": "sellToken", "type": "address" },
           { "internalType": "address", "name": "maker", "type": "address" },
           {
             "internalType": "address",
@@ -535,18 +627,15 @@
           { "internalType": "address", "name": "source", "type": "address" },
           { "internalType": "uint16", "name": "feeBps", "type": "uint16" },
           { "internalType": "uint16", "name": "surplusBps", "type": "uint16" },
-          { "internalType": "uint32", "name": "deadline", "type": "uint32" },
+          { "internalType": "uint32", "name": "startTime", "type": "uint32" },
+          { "internalType": "uint32", "name": "endTime", "type": "uint32" },
           {
             "internalType": "bool",
             "name": "isPartiallyFillable",
             "type": "bool"
           },
-          { "internalType": "uint128", "name": "amountIn", "type": "uint128" },
-          {
-            "internalType": "uint128",
-            "name": "endAmountOut",
-            "type": "uint128"
-          },
+          { "internalType": "uint128", "name": "amount", "type": "uint128" },
+          { "internalType": "uint128", "name": "endAmount", "type": "uint128" },
           {
             "internalType": "uint16",
             "name": "startAmountBps",
@@ -557,21 +646,47 @@
             "name": "expectedAmountBps",
             "type": "uint16"
           },
+          {
+            "internalType": "bool",
+            "name": "hasDynamicSignature",
+            "type": "bool"
+          },
           { "internalType": "bytes", "name": "signature", "type": "bytes" }
         ],
-        "internalType": "struct Memswap.Intent",
-        "name": "intent",
+        "internalType": "struct MemswapERC20.Intent[]",
+        "name": "intents",
+        "type": "tuple[]"
+      },
+      {
+        "components": [
+          { "internalType": "bytes", "name": "data", "type": "bytes" },
+          {
+            "internalType": "uint128[]",
+            "name": "fillAmounts",
+            "type": "uint128[]"
+          },
+          {
+            "internalType": "uint128[]",
+            "name": "executeAmounts",
+            "type": "uint128[]"
+          }
+        ],
+        "internalType": "struct MemswapERC20.Solution",
+        "name": "solution",
         "type": "tuple"
       },
       {
         "components": [
-          { "internalType": "address", "name": "to", "type": "address" },
-          { "internalType": "bytes", "name": "data", "type": "bytes" },
-          { "internalType": "uint128", "name": "amount", "type": "uint128" }
+          {
+            "internalType": "enum PermitExecutor.Kind",
+            "name": "kind",
+            "type": "uint8"
+          },
+          { "internalType": "bytes", "name": "data", "type": "bytes" }
         ],
-        "internalType": "struct Memswap.Solution",
-        "name": "solution",
-        "type": "tuple"
+        "internalType": "struct PermitExecutor.Permit[]",
+        "name": "permits",
+        "type": "tuple[]"
       }
     ],
     "name": "solveWithOnChainAuthorizationCheck",
@@ -583,16 +698,9 @@
     "inputs": [
       {
         "components": [
-          {
-            "internalType": "contract IERC20",
-            "name": "tokenIn",
-            "type": "address"
-          },
-          {
-            "internalType": "contract IERC20",
-            "name": "tokenOut",
-            "type": "address"
-          },
+          { "internalType": "bool", "name": "isBuy", "type": "bool" },
+          { "internalType": "address", "name": "buyToken", "type": "address" },
+          { "internalType": "address", "name": "sellToken", "type": "address" },
           { "internalType": "address", "name": "maker", "type": "address" },
           {
             "internalType": "address",
@@ -602,18 +710,15 @@
           { "internalType": "address", "name": "source", "type": "address" },
           { "internalType": "uint16", "name": "feeBps", "type": "uint16" },
           { "internalType": "uint16", "name": "surplusBps", "type": "uint16" },
-          { "internalType": "uint32", "name": "deadline", "type": "uint32" },
+          { "internalType": "uint32", "name": "startTime", "type": "uint32" },
+          { "internalType": "uint32", "name": "endTime", "type": "uint32" },
           {
             "internalType": "bool",
             "name": "isPartiallyFillable",
             "type": "bool"
           },
-          { "internalType": "uint128", "name": "amountIn", "type": "uint128" },
-          {
-            "internalType": "uint128",
-            "name": "endAmountOut",
-            "type": "uint128"
-          },
+          { "internalType": "uint128", "name": "amount", "type": "uint128" },
+          { "internalType": "uint128", "name": "endAmount", "type": "uint128" },
           {
             "internalType": "uint16",
             "name": "startAmountBps",
@@ -624,50 +729,78 @@
             "name": "expectedAmountBps",
             "type": "uint16"
           },
+          {
+            "internalType": "bool",
+            "name": "hasDynamicSignature",
+            "type": "bool"
+          },
           { "internalType": "bytes", "name": "signature", "type": "bytes" }
         ],
-        "internalType": "struct Memswap.Intent",
-        "name": "intent",
-        "type": "tuple"
+        "internalType": "struct MemswapERC20.Intent[]",
+        "name": "intents",
+        "type": "tuple[]"
       },
       {
         "components": [
-          { "internalType": "address", "name": "to", "type": "address" },
           { "internalType": "bytes", "name": "data", "type": "bytes" },
-          { "internalType": "uint128", "name": "amount", "type": "uint128" }
+          {
+            "internalType": "uint128[]",
+            "name": "fillAmounts",
+            "type": "uint128[]"
+          },
+          {
+            "internalType": "uint128[]",
+            "name": "executeAmounts",
+            "type": "uint128[]"
+          }
         ],
-        "internalType": "struct Memswap.Solution",
+        "internalType": "struct MemswapERC20.Solution",
         "name": "solution",
         "type": "tuple"
       },
       {
         "components": [
           {
-            "internalType": "uint128",
-            "name": "maxAmountIn",
-            "type": "uint128"
+            "components": [
+              {
+                "internalType": "uint128",
+                "name": "fillAmountToCheck",
+                "type": "uint128"
+              },
+              {
+                "internalType": "uint128",
+                "name": "executeAmountToCheck",
+                "type": "uint128"
+              },
+              {
+                "internalType": "uint32",
+                "name": "blockDeadline",
+                "type": "uint32"
+              }
+            ],
+            "internalType": "struct MemswapERC20.Authorization",
+            "name": "authorization",
+            "type": "tuple"
           },
-          {
-            "internalType": "uint128",
-            "name": "minAmountOut",
-            "type": "uint128"
-          },
-          {
-            "internalType": "uint32",
-            "name": "blockDeadline",
-            "type": "uint32"
-          },
-          {
-            "internalType": "bool",
-            "name": "isPartiallyFillable",
-            "type": "bool"
-          }
+          { "internalType": "bytes", "name": "signature", "type": "bytes" }
         ],
-        "internalType": "struct Memswap.Authorization",
-        "name": "auth",
-        "type": "tuple"
+        "internalType": "struct MemswapERC20.AuthorizationWithSignature[]",
+        "name": "auths",
+        "type": "tuple[]"
       },
-      { "internalType": "bytes", "name": "signature", "type": "bytes" }
+      {
+        "components": [
+          {
+            "internalType": "enum PermitExecutor.Kind",
+            "name": "kind",
+            "type": "uint8"
+          },
+          { "internalType": "bytes", "name": "data", "type": "bytes" }
+        ],
+        "internalType": "struct PermitExecutor.Permit[]",
+        "name": "permits",
+        "type": "tuple[]"
+      }
     ],
     "name": "solveWithSignatureAuthorizationCheck",
     "outputs": [],
@@ -675,60 +808,10 @@
     "type": "function"
   },
   {
-    "inputs": [
-      {
-        "components": [
-          {
-            "internalType": "contract IERC20",
-            "name": "tokenIn",
-            "type": "address"
-          },
-          {
-            "internalType": "contract IERC20",
-            "name": "tokenOut",
-            "type": "address"
-          },
-          { "internalType": "address", "name": "maker", "type": "address" },
-          {
-            "internalType": "address",
-            "name": "matchmaker",
-            "type": "address"
-          },
-          { "internalType": "address", "name": "source", "type": "address" },
-          { "internalType": "uint16", "name": "feeBps", "type": "uint16" },
-          { "internalType": "uint16", "name": "surplusBps", "type": "uint16" },
-          { "internalType": "uint32", "name": "deadline", "type": "uint32" },
-          {
-            "internalType": "bool",
-            "name": "isPartiallyFillable",
-            "type": "bool"
-          },
-          { "internalType": "uint128", "name": "amountIn", "type": "uint128" },
-          {
-            "internalType": "uint128",
-            "name": "endAmountOut",
-            "type": "uint128"
-          },
-          {
-            "internalType": "uint16",
-            "name": "startAmountBps",
-            "type": "uint16"
-          },
-          {
-            "internalType": "uint16",
-            "name": "expectedAmountBps",
-            "type": "uint16"
-          },
-          { "internalType": "bytes", "name": "signature", "type": "bytes" }
-        ],
-        "internalType": "struct Memswap.Intent[]",
-        "name": "intents",
-        "type": "tuple[]"
-      }
-    ],
-    "name": "validate",
-    "outputs": [],
-    "stateMutability": "nonpayable",
+    "inputs": [],
+    "name": "usdc",
+    "outputs": [{ "internalType": "address", "name": "", "type": "address" }],
+    "stateMutability": "view",
     "type": "function"
   },
   { "stateMutability": "payable", "type": "receive" }

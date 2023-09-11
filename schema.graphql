@@ -11,16 +11,35 @@ type Currency @entity {
 
 type Intent @entity {
   id: Bytes!
-  tokenIn: Currency!
-  tokenOut: Currency!
+  isBuy: Boolean!
+  buyToken: Currency!
+  sellToken: Currency!
   maker: Bytes!
   matchmaker: Bytes!
-  deadline: Int!
+  source: Bytes!
+  feeBps: Int!
+  surplusBps: Int!
+  startTime: Int!
+  endTime: Int!
   isPartiallyFillable: Boolean!
-  amountIn: BigInt!
-  endAmountOut: BigInt!
-  events: [String!]!
+  amount: BigInt!
+  endAmount: BigInt!
+  startAmountBps: Int!
+  expectedAmountBps: Int!
   isCancelled: Boolean!
-  isValidated: Boolean!
-  amountFilled: BigInt!
+  isPreValidated: Boolean!
+  events: [String!]!
+
+  # tokenIn: Currency!
+  # tokenOut: Currency!
+  # maker: Bytes!
+  # matchmaker: Bytes!
+  # deadline: Int!
+  # isPartiallyFillable: Boolean!
+  # amountIn: BigInt!
+  # endAmountOut: BigInt!
+  # events: [String!]!
+  # isCancelled: Boolean!
+  # isValidated: Boolean!
+  # amountFilled: BigInt!
 }
