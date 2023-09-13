@@ -1,61 +1,7 @@
 import { ponder } from "@/generated";
-import {
-  createPublicClient,
-  decodeAbiParameters,
-  decodeFunctionData,
-  http,
-  parseAbiParameters,
-} from "viem";
+import { decodeFunctionData } from "viem";
 import { approvalCheck, approvalCheckERC721, getTokenDetails } from "./helpers";
 import { IntentERC20, IntentERC721 } from "./common/types";
-import { mainnet } from "viem/chains";
-
-/* ponder.on("setup", async ({ context }) => {
-  const client = createPublicClient({
-    chain: mainnet,
-    transport: http(process.env[`PONDER_RPC_URL_1`]),
-  });
-
-  const tx = await client.getTransaction({
-    hash: "0x09a16581eb8ea3b2602ffbb8b15094c543b960f386d1d28cb30134fc6aabdb71",
-  });
-
-  const restOfCalldata: `0x${string}` = `0x${tx.input.slice(
-    2 + 2 * (4 + 32 + 32)
-  )}`;
-
-  const intentTypes =
-    "bool, address, address, address, address, address, uint16, uint16, uint32, uint32, bool, bool, bool, uint256, uint128, uint128, uint16, uint16, bytes";
-
-  const result = decodeAbiParameters(
-    parseAbiParameters(intentTypes),
-    restOfCalldata
-  );
-
-  const intent = {
-    isBuy: result[0],
-    buyToken: result[1].toLowerCase(),
-    sellToken: result[2].toLowerCase(),
-    maker: result[3].toLowerCase(),
-    solver: result[4].toLowerCase(),
-    source: result[5].toLowerCase(),
-    feeBps: result[6],
-    surplusBps: result[7],
-    startTime: result[8],
-    endTime: result[9],
-    isPartiallyFillable: result[10],
-    isSmartOrder: result[11],
-    isCriteriaOrder: result[12],
-    tokenIdOrCriteria: result[13],
-    amount: result[14],
-    endAmount: result[15],
-    startAmountBps: result[16],
-    expectedAmountBps: result[17],
-    signature: result[18].toLowerCase(),
-  } as IntentERC721;
-
-  console.log(intent);
-}); */
 
 // ERC20
 ponder.on("MemswapERC20:IntentsPosted", async ({ event, context }) => {

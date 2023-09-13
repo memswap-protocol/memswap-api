@@ -323,8 +323,6 @@ export const approvalCheckERC721 = async (
           },
         ]);
 
-      console.log(intentHash);
-
       const { sellToken, buyToken } = await getTokenDetails(
         { address: intent.sellToken, nft: !intent.isBuy },
         { address: intent.buyToken, nft: intent.isBuy },
