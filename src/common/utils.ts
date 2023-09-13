@@ -30,7 +30,7 @@ export const getEIP712TypesForIntent = (protocol: Protocol) => ({
       type: "address",
     },
     {
-      name: "matchmaker",
+      name: "solver",
       type: "address",
     },
     {
@@ -53,18 +53,22 @@ export const getEIP712TypesForIntent = (protocol: Protocol) => ({
       name: "endTime",
       type: "uint32",
     },
-    {
-      name: "nonce",
-      type: "uint256",
-    },
+    // {
+    //   name: "nonce",
+    //   type: "uint256",
+    // },
     {
       name: "isPartiallyFillable",
+      type: "bool",
+    },
+    {
+      name: "isSmartOrder",
       type: "bool",
     },
     ...(protocol === Protocol.ERC721
       ? [
           {
-            name: "hasCriteria",
+            name: "isCriteriaOrder",
             type: "bool",
           },
           {
@@ -89,66 +93,5 @@ export const getEIP712TypesForIntent = (protocol: Protocol) => ({
       name: "expectedAmountBps",
       type: "uint16",
     },
-    {
-      name: "hasDynamicSignature",
-      type: "bool",
-    },
   ],
 });
-
-// export const getEIP712TypesForIntent = () => ({
-//   Intent: [
-//     {
-//       name: "tokenIn",
-//       type: "address",
-//     },
-//     {
-//       name: "tokenOut",
-//       type: "address",
-//     },
-//     {
-//       name: "maker",
-//       type: "address",
-//     },
-//     {
-//       name: "matchmaker",
-//       type: "address",
-//     },
-//     {
-//       name: "source",
-//       type: "address",
-//     },
-//     {
-//       name: "feeBps",
-//       type: "uint16",
-//     },
-//     {
-//       name: "surplusBps",
-//       type: "uint16",
-//     },
-//     {
-//       name: "deadline",
-//       type: "uint32",
-//     },
-//     {
-//       name: "isPartiallyFillable",
-//       type: "bool",
-//     },
-//     {
-//       name: "amountIn",
-//       type: "uint128",
-//     },
-//     {
-//       name: "endAmountOut",
-//       type: "uint128",
-//     },
-//     {
-//       name: "startAmountBps",
-//       type: "uint16",
-//     },
-//     {
-//       name: "expectedAmountBps",
-//       type: "uint16",
-//     },
-//   ],
-// });

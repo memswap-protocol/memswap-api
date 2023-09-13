@@ -4,13 +4,13 @@ import { Assign } from "viem/dist/types/types/utils";
 import { ChainConfig, ChainFormatters } from "viem/dist/types/types/chain";
 
 export const MEMSWAP_ERC20: ChainIdToAddress = {
-  1: "0x63c9362a7bedc92dec83433c15d623fbd3e1e5a9",
-  5: "0xd8c0e3287ba121925987baa85338b8a87574789e",
+  1: process.env.MEMSWAP_ERC20_1 as `0x${string}`,
+  5: process.env.MEMSWAP_ERC20_5 as `0x${string}`,
 };
 
 export const MEMSWAP_ERC721: ChainIdToAddress = {
-  1: "0x",
-  5: "0xcc22e868f4e7fb16cdcbfc70dbdd2716c92f8862",
+  1: process.env.MEMSWAP_ERC721_1 as `0x${string}`,
+  5: process.env.MEMSWAP_ERC721_5 as `0x${string}`,
 };
 
 export const MEMSWAP_WETH: ChainIdToAddress = {
@@ -29,4 +29,9 @@ export const MemswapChains: Record<
 > = {
   "1": mainnet,
   "5": goerli,
+};
+
+export const RESERVOIR_API_URL: Record<number, string> = {
+  1: "https://api.reservoir.tools",
+  5: "https://api-goerli.reservoir.tools",
 };

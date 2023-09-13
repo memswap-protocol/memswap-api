@@ -12,18 +12,22 @@ export type IntentERC20 = {
   buyToken: AddressType;
   sellToken: AddressType;
   maker: AddressType;
-  matchmaker: AddressType;
+  solver: AddressType;
   source: AddressType;
   feeBps: number;
   surplusBps: number;
   startTime: number;
   endTime: number;
-  nonce: string;
   isPartiallyFillable: boolean;
+  isSmartOrder: boolean;
   amount: bigint;
   endAmount: bigint;
   startAmountBps: number;
   expectedAmountBps: number;
-  hasDynamicSignature: boolean;
   signature: AddressType;
+};
+
+export type IntentERC721 = IntentERC20 & {
+  isCriteriaOrder: boolean;
+  tokenIdOrCriteria: bigint;
 };
