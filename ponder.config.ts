@@ -20,6 +20,10 @@ export const config: Config = async () => {
         address: process.env.MEMSWAP_ERC721_1 as `0x${string}`,
         startBlock: Number(process.env.MEMSWAP_ERC721_1_STARTBLOCK),
       },
+      SolutionProxy: {
+        address: process.env.MEMSWAP_SOLUTIONPROXY_1 as `0x${string}`,
+        startBlock: Number(process.env.MEMSWAP_SOLUTIONPROXY_1_STARTBLOCK),
+      },
     },
     goerli: {
       ERC20: {
@@ -29,6 +33,10 @@ export const config: Config = async () => {
       ERC721: {
         address: process.env.MEMSWAP_ERC721_5 as `0x${string}`,
         startBlock: Number(process.env.MEMSWAP_ERC721_5_STARTBLOCK),
+      },
+      SolutionProxy: {
+        address: process.env.MEMSWAP_SOLUTIONPROXY_5 as `0x${string}`,
+        startBlock: Number(process.env.MEMSWAP_SOLUTIONPROXY_5_STARTBLOCK),
       },
     },
   };
@@ -49,6 +57,13 @@ export const config: Config = async () => {
         address: ContractDetails.mainnet.ERC721.address,
         startBlock: ContractDetails.mainnet.ERC721.startBlock,
       },
+      {
+        name: "MemswapSolutionProxy",
+        network: "mainnet",
+        abi: "./abis/MemswapSolutionProxy.json",
+        address: ContractDetails.mainnet.SolutionProxy.address,
+        startBlock: ContractDetails.mainnet.SolutionProxy.startBlock,
+      },
     ],
     5: [
       {
@@ -64,6 +79,13 @@ export const config: Config = async () => {
         abi: "./abis/MemswapERC721.json",
         address: ContractDetails.goerli.ERC721.address,
         startBlock: ContractDetails.goerli.ERC721.startBlock,
+      },
+      {
+        name: "MemswapSolutionProxy",
+        network: "goerli",
+        abi: "./abis/MemswapSolutionProxy.json",
+        address: ContractDetails.goerli.SolutionProxy.address,
+        startBlock: ContractDetails.goerli.SolutionProxy.startBlock,
       },
     ],
   };

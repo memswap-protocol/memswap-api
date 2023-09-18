@@ -1,5 +1,11 @@
 [
-  { "inputs": [], "stateMutability": "nonpayable", "type": "constructor" },
+  {
+    "inputs": [
+      { "internalType": "address", "name": "memswapNft", "type": "address" }
+    ],
+    "stateMutability": "nonpayable",
+    "type": "constructor"
+  },
   { "inputs": [], "name": "AmountCheckFailed", "type": "error" },
   { "inputs": [], "name": "AuthorizationAmountMismatch", "type": "error" },
   { "inputs": [], "name": "AuthorizationIsExpired", "type": "error" },
@@ -10,12 +16,20 @@
   { "inputs": [], "name": "IntentIsNotPartiallyFillable", "type": "error" },
   { "inputs": [], "name": "IntentIsNotStarted", "type": "error" },
   { "inputs": [], "name": "InvalidFillAmount", "type": "error" },
+  { "inputs": [], "name": "InvalidPriorityFee", "type": "error" },
   { "inputs": [], "name": "InvalidSignature", "type": "error" },
   { "inputs": [], "name": "InvalidSolution", "type": "error" },
   { "inputs": [], "name": "InvalidStartAndEndTimes", "type": "error" },
+  { "inputs": [], "name": "InvalidTip", "type": "error" },
   { "inputs": [], "name": "MerkleTreeTooLarge", "type": "error" },
   { "inputs": [], "name": "Unauthorized", "type": "error" },
   { "inputs": [], "name": "UnsuccessfulCall", "type": "error" },
+  {
+    "anonymous": false,
+    "inputs": [],
+    "name": "IncentivizationParametersUpdated",
+    "type": "event"
+  },
   {
     "anonymous": false,
     "inputs": [
@@ -123,6 +137,25 @@
     "type": "event"
   },
   {
+    "anonymous": false,
+    "inputs": [
+      {
+        "indexed": true,
+        "internalType": "address",
+        "name": "previousOwner",
+        "type": "address"
+      },
+      {
+        "indexed": true,
+        "internalType": "address",
+        "name": "newOwner",
+        "type": "address"
+      }
+    ],
+    "name": "OwnershipTransferred",
+    "type": "event"
+  },
+  {
     "inputs": [],
     "name": "AUTHORIZATION_TYPEHASH",
     "outputs": [{ "internalType": "bytes32", "name": "", "type": "bytes32" }],
@@ -140,6 +173,13 @@
     "inputs": [],
     "name": "INTENT_TYPEHASH",
     "outputs": [{ "internalType": "bytes32", "name": "", "type": "bytes32" }],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [],
+    "name": "MEMSWAP_NFT",
+    "outputs": [{ "internalType": "address", "name": "", "type": "address" }],
     "stateMutability": "view",
     "type": "function"
   },
@@ -182,6 +222,7 @@
             "type": "bool"
           },
           { "internalType": "bool", "name": "isSmartOrder", "type": "bool" },
+          { "internalType": "bool", "name": "isIncentivized", "type": "bool" },
           { "internalType": "uint128", "name": "amount", "type": "uint128" },
           { "internalType": "uint128", "name": "endAmount", "type": "uint128" },
           {
@@ -249,6 +290,7 @@
             "type": "bool"
           },
           { "internalType": "bool", "name": "isSmartOrder", "type": "bool" },
+          { "internalType": "bool", "name": "isIncentivized", "type": "bool" },
           { "internalType": "uint128", "name": "amount", "type": "uint128" },
           { "internalType": "uint128", "name": "endAmount", "type": "uint128" },
           {
@@ -271,6 +313,13 @@
     "name": "cancel",
     "outputs": [],
     "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "inputs": [],
+    "name": "defaultSlippage",
+    "outputs": [{ "internalType": "uint16", "name": "", "type": "uint16" }],
+    "stateMutability": "view",
     "type": "function"
   },
   {
@@ -331,6 +380,7 @@
             "type": "bool"
           },
           { "internalType": "bool", "name": "isSmartOrder", "type": "bool" },
+          { "internalType": "bool", "name": "isIncentivized", "type": "bool" },
           { "internalType": "uint128", "name": "amount", "type": "uint128" },
           { "internalType": "uint128", "name": "endAmount", "type": "uint128" },
           {
@@ -383,9 +433,37 @@
     "type": "function"
   },
   {
+    "inputs": [],
+    "name": "maxTip",
+    "outputs": [{ "internalType": "uint64", "name": "", "type": "uint64" }],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [],
+    "name": "minTip",
+    "outputs": [{ "internalType": "uint64", "name": "", "type": "uint64" }],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [],
+    "name": "multiplier",
+    "outputs": [{ "internalType": "uint16", "name": "", "type": "uint16" }],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
     "inputs": [{ "internalType": "address", "name": "", "type": "address" }],
     "name": "nonce",
     "outputs": [{ "internalType": "uint256", "name": "", "type": "uint256" }],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [],
+    "name": "owner",
+    "outputs": [{ "internalType": "address", "name": "", "type": "address" }],
     "stateMutability": "view",
     "type": "function"
   },
@@ -416,6 +494,7 @@
             "type": "bool"
           },
           { "internalType": "bool", "name": "isSmartOrder", "type": "bool" },
+          { "internalType": "bool", "name": "isIncentivized", "type": "bool" },
           { "internalType": "uint128", "name": "amount", "type": "uint128" },
           { "internalType": "uint128", "name": "endAmount", "type": "uint128" },
           {
@@ -460,6 +539,7 @@
             "type": "bool"
           },
           { "internalType": "bool", "name": "isSmartOrder", "type": "bool" },
+          { "internalType": "bool", "name": "isIncentivized", "type": "bool" },
           { "internalType": "uint128", "name": "amount", "type": "uint128" },
           { "internalType": "uint128", "name": "endAmount", "type": "uint128" },
           {
@@ -485,6 +565,20 @@
     "type": "function"
   },
   {
+    "inputs": [],
+    "name": "renounceOwnership",
+    "outputs": [],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "inputs": [],
+    "name": "requiredPriorityFee",
+    "outputs": [{ "internalType": "uint64", "name": "", "type": "uint64" }],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
     "inputs": [
       {
         "components": [
@@ -504,6 +598,7 @@
             "type": "bool"
           },
           { "internalType": "bool", "name": "isSmartOrder", "type": "bool" },
+          { "internalType": "bool", "name": "isIncentivized", "type": "bool" },
           { "internalType": "uint128", "name": "amount", "type": "uint128" },
           { "internalType": "uint128", "name": "endAmount", "type": "uint128" },
           {
@@ -548,6 +643,7 @@
             "type": "bool"
           },
           { "internalType": "bool", "name": "isSmartOrder", "type": "bool" },
+          { "internalType": "bool", "name": "isIncentivized", "type": "bool" },
           { "internalType": "uint128", "name": "amount", "type": "uint128" },
           { "internalType": "uint128", "name": "endAmount", "type": "uint128" },
           {
@@ -614,6 +710,7 @@
             "type": "bool"
           },
           { "internalType": "bool", "name": "isSmartOrder", "type": "bool" },
+          { "internalType": "bool", "name": "isIncentivized", "type": "bool" },
           { "internalType": "uint128", "name": "amount", "type": "uint128" },
           { "internalType": "uint128", "name": "endAmount", "type": "uint128" },
           {
@@ -680,6 +777,7 @@
             "type": "bool"
           },
           { "internalType": "bool", "name": "isSmartOrder", "type": "bool" },
+          { "internalType": "bool", "name": "isIncentivized", "type": "bool" },
           { "internalType": "uint128", "name": "amount", "type": "uint128" },
           { "internalType": "uint128", "name": "endAmount", "type": "uint128" },
           {
@@ -747,6 +845,36 @@
     "name": "solveWithSignatureAuthorizationCheck",
     "outputs": [],
     "stateMutability": "payable",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      { "internalType": "address", "name": "newOwner", "type": "address" }
+    ],
+    "name": "transferOwnership",
+    "outputs": [],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "uint16",
+        "name": "newDefaultSlippage",
+        "type": "uint16"
+      },
+      { "internalType": "uint16", "name": "newMultiplier", "type": "uint16" },
+      {
+        "internalType": "uint64",
+        "name": "newRequiredPriorityFee",
+        "type": "uint64"
+      },
+      { "internalType": "uint64", "name": "newMinTip", "type": "uint64" },
+      { "internalType": "uint64", "name": "newMaxTip", "type": "uint64" }
+    ],
+    "name": "updateIncentivizationParameters",
+    "outputs": [],
+    "stateMutability": "nonpayable",
     "type": "function"
   },
   { "stateMutability": "payable", "type": "receive" }

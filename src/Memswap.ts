@@ -20,36 +20,42 @@ ponder.on("MemswapERC20:IntentsPosted", async ({ event, context }) => {
       intentPostedInputs,
     ]);
 
-    const { sellToken, buyToken } = await getTokenDetails(
-      { address: intentPostedInputs.sellToken, nft: false },
-      { address: intentPostedInputs.buyToken, nft: false },
-      Currency
-    );
-
-    await Intent.create({
+    const existingIntent = await Intent.findUnique({
       id: intentHash,
-      data: {
-        isBuy: intentPostedInputs.isBuy,
-        sellToken: sellToken,
-        buyToken: buyToken,
-        maker: intentPostedInputs.maker,
-        solver: intentPostedInputs.solver,
-        source: intentPostedInputs.source,
-        feeBps: intentPostedInputs.feeBps,
-        surplusBps: intentPostedInputs.surplusBps,
-        startTime: intentPostedInputs.startTime,
-        endTime: intentPostedInputs.endTime,
-        isPartiallyFillable: intentPostedInputs.isPartiallyFillable,
-        amount: intentPostedInputs.amount,
-        endAmount: intentPostedInputs.endAmount,
-        startAmountBps: intentPostedInputs.startAmountBps,
-        expectedAmountBps: intentPostedInputs.expectedAmountBps,
-        isPreValidated: false,
-        isCancelled: false,
-        events: [event.transaction.hash],
-        amountFilled: BigInt(0),
-      },
     });
+
+    if (!existingIntent) {
+      const { sellToken, buyToken } = await getTokenDetails(
+        { address: intentPostedInputs.sellToken, nft: false },
+        { address: intentPostedInputs.buyToken, nft: false },
+        Currency
+      );
+
+      await Intent.create({
+        id: intentHash,
+        data: {
+          isBuy: intentPostedInputs.isBuy,
+          sellToken: sellToken,
+          buyToken: buyToken,
+          maker: intentPostedInputs.maker,
+          solver: intentPostedInputs.solver,
+          source: intentPostedInputs.source,
+          feeBps: intentPostedInputs.feeBps,
+          surplusBps: intentPostedInputs.surplusBps,
+          startTime: intentPostedInputs.startTime,
+          endTime: intentPostedInputs.endTime,
+          isPartiallyFillable: intentPostedInputs.isPartiallyFillable,
+          amount: intentPostedInputs.amount,
+          endAmount: intentPostedInputs.endAmount,
+          startAmountBps: intentPostedInputs.startAmountBps,
+          expectedAmountBps: intentPostedInputs.expectedAmountBps,
+          isPreValidated: false,
+          isCancelled: false,
+          events: [event.transaction.hash],
+          amountFilled: BigInt(0),
+        },
+      });
+    }
   }
 });
 
@@ -116,7 +122,7 @@ ponder.on("MemswapERC20:IntentCancelled", async ({ event, context }) => {
 
 ponder.on("MemswapERC20:IntentSolved", async ({ event, context }) => {
   const intentSolvedTx = decodeFunctionData({
-    abi: context.contracts.MemswapERC20.abi,
+    abi: context.contracts.MemswapSolutionProxy.abi,
     data: event.transaction.input,
   });
 
@@ -301,7 +307,7 @@ ponder.on("MemswapERC721:IntentCancelled", async ({ event, context }) => {
 
 ponder.on("MemswapERC721:IntentSolved", async ({ event, context }) => {
   const intentSolvedTx = decodeFunctionData({
-    abi: context.contracts.MemswapERC721.abi,
+    abi: context.contracts.MemswapSolutionProxy.abi,
     data: event.transaction.input,
   });
 

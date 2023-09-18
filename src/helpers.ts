@@ -18,8 +18,8 @@ import {
 } from "./common/constants";
 import {
   AddressType,
-  IntentERC20,
-  IntentERC721,
+  IntentERC20Approval,
+  IntentERC721Approval,
   Protocol,
 } from "./common/types";
 import { getEIP712Domain, getEIP712TypesForIntent } from "./common/utils";
@@ -70,11 +70,11 @@ export const approvalCheck = async (
       approvalTxHash = transaction.hash;
     }
 
-    let intent: IntentERC20 | undefined;
+    let intent: IntentERC20Approval | undefined;
     if (restOfCalldata && restOfCalldata.length > 2) {
       try {
         const intentTypes =
-          "bool, address, address, address, address, address, uint16, uint16, uint32, uint32, bool, bool, uint128, uint128, uint16, uint16, bytes";
+          "bool, address, address, address, address, address, uint16, uint16, uint32, uint32, bool, bool, bool, uint128, uint128, uint16, uint16, bytes";
 
         const result = decodeAbiParameters(
           parseAbiParameters(intentTypes),
@@ -92,14 +92,16 @@ export const approvalCheck = async (
           surplusBps: result[7],
           startTime: result[8],
           endTime: result[9],
+          nonce: BigInt(0),
           isPartiallyFillable: result[10],
           isSmartOrder: result[11],
-          amount: result[12],
-          endAmount: result[13],
-          startAmountBps: result[14],
-          expectedAmountBps: result[15],
-          signature: result[16].toLowerCase(),
-        } as IntentERC20;
+          isIncentivized: result[12],
+          amount: result[13],
+          endAmount: result[14],
+          startAmountBps: result[15],
+          expectedAmountBps: result[16],
+          signature: result[17].toLowerCase(),
+        } as IntentERC20Approval;
       } catch (err) {
         // console.log(err);
       }
@@ -122,7 +124,7 @@ export const approvalCheck = async (
       });
 
       if (!valid) {
-        return;
+        throw new Error("Invalid ERC20 intent found");
       }
 
       const { Intent, Currency } = context.entities;
@@ -142,6 +144,7 @@ export const approvalCheck = async (
             endTime: intent.endTime,
             isPartiallyFillable: intent.isPartiallyFillable,
             isSmartOrder: intent.isSmartOrder,
+            isIncentivized: intent.isIncentivized,
             amount: BigInt(intent.amount),
             endAmount: BigInt(intent.endAmount),
             startAmountBps: intent.startAmountBps,
@@ -190,7 +193,9 @@ export const approvalCheck = async (
         },
       });
     }
-  } catch (err) {}
+  } catch (err) {
+    console.log("approvalCheckERC20 Error: ", err);
+  }
 };
 
 export const approvalCheckERC721 = async (
@@ -236,11 +241,11 @@ export const approvalCheckERC721 = async (
       approvalTxHash = transaction.hash;
     }
 
-    let intent: IntentERC721 | undefined;
+    let intent: IntentERC721Approval | undefined;
     if (restOfCalldata && restOfCalldata.length > 2) {
       try {
         const intentTypes =
-          "bool, address, address, address, address, address, uint16, uint16, uint32, uint32, bool, bool, bool, uint256, uint128, uint128, uint16, uint16, bytes";
+          "bool, address, address, address, address, address, uint16, uint16, uint32, uint32, bool, bool, bool, bool, uint256, uint128, uint128, uint16, uint16, bytes";
 
         const result = decodeAbiParameters(
           parseAbiParameters(intentTypes),
@@ -258,16 +263,18 @@ export const approvalCheckERC721 = async (
           surplusBps: result[7],
           startTime: result[8],
           endTime: result[9],
+          nonce: BigInt(0),
           isPartiallyFillable: result[10],
           isSmartOrder: result[11],
-          isCriteriaOrder: result[12],
-          tokenIdOrCriteria: result[13],
-          amount: result[14],
-          endAmount: result[15],
-          startAmountBps: result[16],
-          expectedAmountBps: result[17],
-          signature: result[18].toLowerCase(),
-        } as IntentERC721;
+          isIncentivized: result[12],
+          isCriteriaOrder: result[13],
+          tokenIdOrCriteria: result[14],
+          amount: result[15],
+          endAmount: result[16],
+          startAmountBps: result[17],
+          expectedAmountBps: result[18],
+          signature: result[19].toLowerCase(),
+        } as IntentERC721Approval;
       } catch {
         // Skip errors
       }
@@ -279,23 +286,17 @@ export const approvalCheckERC721 = async (
         transport: http(process.env[`PONDER_RPC_URL_${chain.id}`]),
       });
 
-      let valid: any = undefined;
-      try {
-        // Check the signature first
-        valid = await client.verifyTypedData({
-          address: intent.maker as AddressType,
-          domain: getEIP712Domain(chain.id, Protocol.ERC721),
-          types: getEIP712TypesForIntent(Protocol.ERC721),
-          primaryType: "Intent",
-          message: intent,
-          signature: intent.signature as AddressType,
-        });
-      } catch (err: any) {
-        // console.log(err);
-      }
+      const valid = await client.verifyTypedData({
+        address: intent.maker as AddressType,
+        domain: getEIP712Domain(chain.id, Protocol.ERC721),
+        types: getEIP712TypesForIntent(Protocol.ERC721),
+        primaryType: "Intent",
+        message: intent,
+        signature: intent.signature as AddressType,
+      });
 
       if (!valid) {
-        return;
+        throw new Error("Invalid ERC721 intent found");
       }
 
       const { Intent, Currency } = context.entities;
@@ -314,11 +315,12 @@ export const approvalCheckERC721 = async (
             startTime: intent.startTime,
             endTime: intent.endTime,
             isPartiallyFillable: intent.isPartiallyFillable,
+            isIncentivized: intent.isIncentivized,
             isSmartOrder: intent.isSmartOrder,
             isCriteriaOrder: intent.isCriteriaOrder,
-            tokenIdOrCriteria: intent.tokenIdOrCriteria,
-            amount: intent.amount,
-            endAmount: intent.endAmount,
+            tokenIdOrCriteria: BigInt(intent.tokenIdOrCriteria),
+            amount: BigInt(intent.amount),
+            endAmount: BigInt(intent.endAmount),
             startAmountBps: intent.startAmountBps,
             expectedAmountBps: intent.expectedAmountBps,
             signature: intent.signature,
@@ -365,7 +367,9 @@ export const approvalCheckERC721 = async (
         },
       });
     }
-  } catch (err) {}
+  } catch (err) {
+    console.log("approvalCheckERC721 Error: ", err);
+  }
 };
 
 export const getToken = async (address: `0x${string}`): Promise<Currency> => {
@@ -429,54 +433,6 @@ export const getToken = async (address: `0x${string}`): Promise<Currency> => {
 
   return new Token(chain.id, address, decimals, symbol, name);
 };
-
-/* export const getTokenDetails = async (
-  sellTokenAddress: `0x${string}`,
-  buyTokenAddress: `0x${string}`,
-  Currency: Context["entities"]["Currency"]
-): Promise<{ sellToken: string; buyToken: string }> => {
-  const sellTokenInfo = await getToken(sellTokenAddress);
-
-  if (!sellTokenInfo) {
-    throw new Error("No token info");
-  }
-
-  const sellToken = await Currency.upsert({
-    id: sellTokenAddress as string,
-    create: {
-      isNative: sellTokenInfo.isNative,
-      isToken: sellTokenInfo.isToken,
-      chainId: sellTokenInfo.chainId,
-      decimals: sellTokenInfo.decimals,
-      symbol: sellTokenInfo.symbol,
-      name: sellTokenInfo.name,
-      address: (sellTokenInfo as Token)?.address,
-    },
-    update: {},
-  });
-
-  const buyTokenInfo = await getToken(buyTokenAddress);
-
-  if (!buyTokenInfo) {
-    throw new Error("No token info");
-  }
-
-  const buyToken = await Currency.upsert({
-    id: buyTokenAddress as string,
-    create: {
-      isNative: buyTokenInfo.isNative,
-      isToken: buyTokenInfo.isToken,
-      chainId: buyTokenInfo.chainId,
-      decimals: buyTokenInfo.decimals,
-      symbol: buyTokenInfo.symbol,
-      name: buyTokenInfo.name,
-      address: (buyTokenInfo as Token)?.address,
-    },
-    update: {},
-  });
-
-  return { sellToken: sellToken.id, buyToken: buyToken.id };
-}; */
 
 export const getTokenDetails = async (
   sellTokenDetails: { address: `0x${string}`; nft: boolean },
