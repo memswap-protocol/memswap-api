@@ -124,7 +124,7 @@ ponder.on("MemswapERC20:IntentSolved", async ({ event, context }) => {
   const intentSolvedArgs = intentSolvedTx.args;
 
   if (typeof intentSolvedArgs?.[0] === "object") {
-    const intentSolvedInputs: IntentERC20 = (intentSolvedArgs[0] as any)[0];
+    const intentSolvedInputs: IntentERC20 = intentSolvedArgs[0];
 
     const solvedIntent = await Intent.findUnique({
       id: event.params.intentHash,

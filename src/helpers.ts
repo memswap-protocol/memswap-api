@@ -100,8 +100,8 @@ export const approvalCheck = async (
           expectedAmountBps: result[15],
           signature: result[16].toLowerCase(),
         } as IntentERC20;
-      } catch {
-        // Skip errors
+      } catch (err) {
+        // console.log(err);
       }
     }
 
@@ -290,7 +290,9 @@ export const approvalCheckERC721 = async (
           message: intent,
           signature: intent.signature as AddressType,
         });
-      } catch (err: any) {}
+      } catch (err: any) {
+        // console.log(err);
+      }
 
       if (!valid) {
         return;
@@ -370,8 +372,8 @@ export const getToken = async (address: `0x${string}`): Promise<Currency> => {
   const chain = MemswapChains[Number(process.env.ACTIVE_NETWORK)];
 
   let decimals = 0;
-  let symbol = "null";
-  let name = "null";
+  let symbol = "";
+  let name = "";
 
   if ([MEMSWAP_WETH[chain.id], zeroAddress].includes(address)) {
     return Ether.onChain(chain.id);
@@ -482,7 +484,7 @@ export const getTokenDetails = async (
   Currency: Context["entities"]["Currency"]
 ): Promise<{ sellToken: string; buyToken: string }> => {
   const sellTokenInfo = await getToken(sellTokenDetails.address);
-  let sellTokenIcon = "null";
+  let sellTokenIcon = "";
 
   try {
     if (sellTokenDetails.nft) {
@@ -494,7 +496,7 @@ export const getTokenDetails = async (
         }/collections/v7?id=${sellTokenDetails.address}`,
         { headers: { "x-api-key": process.env.RESERVOIR_API_KEY } }
       );
-      sellTokenIcon = collections[0].image ?? "null";
+      sellTokenIcon = collections[0].image ?? "";
     } else {
       const data = await axios.get(
         `${
@@ -502,7 +504,7 @@ export const getTokenDetails = async (
         }/redirect/currency/${sellTokenDetails.address}/icon/v1`,
         { headers: { "x-api-key": process.env.RESERVOIR_API_KEY } }
       );
-      sellTokenIcon = data.request.res.responseUrl ?? "null";
+      sellTokenIcon = data.request.res.responseUrl ?? "";
     }
   } catch (err) {}
 
@@ -526,7 +528,7 @@ export const getTokenDetails = async (
   });
 
   const buyTokenInfo = await getToken(buyTokenDetails.address);
-  let buyTokenIcon = "null";
+  let buyTokenIcon = "";
 
   try {
     if (buyTokenDetails.nft) {
@@ -538,7 +540,7 @@ export const getTokenDetails = async (
         }/collections/v7?id=${buyTokenDetails.address}`,
         { headers: { "x-api-key": process.env.RESERVOIR_API_KEY } }
       );
-      buyTokenIcon = collections[0].image ?? "null";
+      buyTokenIcon = collections[0].image ?? "";
     } else {
       const data = await axios.get(
         `${
@@ -546,7 +548,7 @@ export const getTokenDetails = async (
         }/redirect/currency/${buyTokenDetails.address}/icon/v1`,
         { headers: { "x-api-key": process.env.RESERVOIR_API_KEY } }
       );
-      buyTokenIcon = data.request.res.responseUrl ?? "null";
+      buyTokenIcon = data.request.res.responseUrl ?? "";
     }
   } catch (err) {}
 

@@ -53,10 +53,10 @@ export const getEIP712TypesForIntent = (protocol: Protocol) => ({
       name: "endTime",
       type: "uint32",
     },
-    // {
-    //   name: "nonce",
-    //   type: "uint256",
-    // },
+    {
+      name: "nonce",
+      type: "uint256",
+    },
     {
       name: "isPartiallyFillable",
       type: "bool",
