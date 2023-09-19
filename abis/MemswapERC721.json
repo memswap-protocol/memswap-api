@@ -1,7 +1,11 @@
 [
   {
     "inputs": [
-      { "internalType": "address", "name": "memswapNft", "type": "address" }
+      {
+        "internalType": "address",
+        "name": "memswapAlphaNft",
+        "type": "address"
+      }
     ],
     "stateMutability": "nonpayable",
     "type": "constructor"
@@ -180,7 +184,7 @@
   },
   {
     "inputs": [],
-    "name": "MEMSWAP_NFT",
+    "name": "MEMSWAP_ALPHA_NFT",
     "outputs": [{ "internalType": "address", "name": "", "type": "address" }],
     "stateMutability": "view",
     "type": "function"
