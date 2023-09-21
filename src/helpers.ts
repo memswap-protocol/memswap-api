@@ -55,7 +55,6 @@ export const approvalCheck = async (
     });
 
     let restOfCalldata: `0x${string}` | undefined;
-    let approvalTxHash: `0x${string}` | undefined;
 
     const spender = (
       approvalTx.args?.[0] as `0x${string}`
@@ -67,7 +66,6 @@ export const approvalCheck = async (
         spender === MEMSWAP_WETH[chain.id])
     ) {
       restOfCalldata = `0x${transaction.input.slice(2 + 2 * (4 + 32 + 32))}`;
-      approvalTxHash = transaction.hash;
     }
 
     let intent: IntentERC20Approval | undefined;
@@ -464,10 +462,6 @@ export const getTokenDetails = async (
     }
   } catch (err) {}
 
-  if (!sellTokenInfo) {
-    throw new Error("No token info");
-  }
-
   const sellToken = await Currency.upsert({
     id: sellTokenDetails.address as string,
     create: {
@@ -507,10 +501,6 @@ export const getTokenDetails = async (
       buyTokenIcon = data.request.res.responseUrl ?? "";
     }
   } catch (err) {}
-
-  if (!buyTokenInfo) {
-    throw new Error("No token info");
-  }
 
   const buyToken = await Currency.upsert({
     id: buyTokenDetails.address as string,
